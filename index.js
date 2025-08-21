@@ -43,15 +43,26 @@ for (const file of eventFiles) {
 
 // Bot hazır olunca slash komutları yükle
 client.once("ready", async () => {
+  console.log(`✅ ${client.user.tag} olarak giriş yapıldı!`);
+
   const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
+
   try {
+    // Önce guild komutlarını temizle
+    await rest.put(
+      Routes.applicationGuildCommands(client.user.id, process.env.GUILD_ID),
+      { body: [] }
+    );
+    console.log("✅ Eski guild komutları temizlendi");
+
+    // Sonra güncel komutları yükle
     await rest.put(
       Routes.applicationGuildCommands(client.user.id, process.env.GUILD_ID),
       { body: commands }
     );
     console.log("✅ Slash komutları yüklendi!");
   } catch (err) {
-    console.error(err);
+    console.error("❌ Slash komut yükleme hatası:", err);
   }
 });
 

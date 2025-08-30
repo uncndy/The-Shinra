@@ -92,7 +92,7 @@ module.exports = {
             });
 
             // Log kanalına gönder
-            const logChannel = interaction.guild.channels.cache.get(config.channels.muteLog);
+            const logChannel = interaction.guild.channels.cache.get(config.logChannels.muteLog);
             if (logChannel) {
                 await logChannel.send({ embeds: [embed] });
             }

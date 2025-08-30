@@ -46,7 +46,12 @@ module.exports = {
 
     try {
       // 3. Hedef kullanıcı rol kontrolü
-      const targetMember = await interaction.guild.members.fetch(user.id);
+      let targetMember;
+      try {
+        targetMember = await interaction.guild.members.fetch(user.id);
+      } catch (e) {
+        targetMember = null; // Üye sunucuda değilse null
+      }
       if (targetMember && targetMember.roles.highest.position >= interaction.member.roles.highest.position) {
         return interaction.reply({
           content: "❌ Bu kullanıcıyı banlayamazsın - rol hiyerarşisi",
@@ -88,7 +93,7 @@ module.exports = {
       await interaction.reply({ content: `> **@${user.username}** kullanıcı başarıyla banlandı.`, flags: ["Ephemeral"] });
 
       // Log kanalına gönder
-      const logChannel = interaction.guild.channels.cache.get(config.channels.banLog);
+      const logChannel = interaction.guild.channels.cache.get(config.logChannels.banLog);
       if (logChannel) logChannel.send({ embeds: [embed] });
 
     } catch (err) {

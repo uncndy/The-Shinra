@@ -67,7 +67,7 @@ module.exports = {
       });
 
       // Log kanalına gönder
-      const logChannel = interaction.guild.channels.cache.get(config.channels.banLog);
+      const logChannel = interaction.guild.channels.cache.get(config.logChannels.banLog);
       if (logChannel) {
         await logChannel.send({ embeds: [embed] });
       }

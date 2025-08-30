@@ -90,7 +90,7 @@ module.exports = {
       });
 
       // Log kanalına gönder
-      const logChannel = interaction.guild.channels.cache.get(config.channels.kickLog);
+      const logChannel = interaction.guild.channels.cache.get(config.logChannels.kickLog);
       if (logChannel) logChannel.send({ embeds: [embed] });
 
     } catch (err) {

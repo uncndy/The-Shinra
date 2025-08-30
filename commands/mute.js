@@ -57,9 +57,7 @@ module.exports = {
             }
 
             // Muted rolünü bul ve ver
-            const mutedRole = interaction.guild.roles.cache.find(role => 
-                role.name.toLowerCase() === config.roles.muted.toLowerCase()
-            );
+            const mutedRole = interaction.guild.roles.cache.get(config.roles.muted);
 
             if (!mutedRole) {
                 return interaction.reply({ 
@@ -115,7 +113,7 @@ module.exports = {
             });
 
             // Log kanalına gönder
-            const logChannel = interaction.guild.channels.cache.get(config.channels.muteLog);
+            const logChannel = interaction.guild.channels.cache.get(config.logChannels.muteLog);
             if (logChannel) {
                 await logChannel.send({ embeds: [embed] });
             }

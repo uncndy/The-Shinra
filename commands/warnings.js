@@ -64,13 +64,13 @@ module.exports = {
         return new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId("prev")
-            .setLabel("◀️")
-            .setStyle(ButtonStyle.Secondary)
+            .setLabel("◀️ Geri")
+            .setStyle(ButtonStyle.Primary)
             .setDisabled(page === 0),
           new ButtonBuilder()
             .setCustomId("next")
-            .setLabel("▶️")
-            .setStyle(ButtonStyle.Secondary)
+            .setLabel("İleri ▶️")
+            .setStyle(ButtonStyle.Primary)
             .setDisabled(page === totalPages - 1)
         );
       };

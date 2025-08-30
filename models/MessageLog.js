@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
+const { guild } = require("../config");
 
 const messageLogSchema = new mongoose.Schema({
   userId: String,
   channelId: String,
+  guildId: String,
   timestamp: { type: Date, default: Date.now }
 });
 

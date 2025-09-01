@@ -1,6 +1,6 @@
 module.exports = {
     channels: {
-        generalChat: "1407441105422913666" // Genel sohbet kanalı
+        generalChat: "1405946096785555647" // Genel sohbet kanalı
     },
     logChannels: {
         warnLog: "1407348241632329878",    // Uyarı takip log kanalı

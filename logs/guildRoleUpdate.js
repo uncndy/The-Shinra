@@ -57,12 +57,12 @@ module.exports = {
           iconURL: executor ? executor.displayAvatarURL() : null,
         })
         .setDescription(
-          `📝 ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${oldRole.name}** (\`${oldRole.id}\`) rolü güncellendi.`
+          `${config.emojis.update} ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${oldRole.name}** (\`${oldRole.id}\`) rolü güncellendi.`
         )
         .addFields(
-          { name: "Rol", value: `${newRole}`, inline: true },
-          { name: "Değişiklikler", value: changes.join("\n") || "Yok", inline: true },
-          { name: "Sorumlu Moderator", value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
+          { name: `${config.emojis.role} Rol`, value: `${newRole}`, inline: true },
+          { name: `${config.emojis.update} Değişiklikler`, value: changes.join("\n") || "Yok", inline: true },
+          { name: `${config.emojis.sorumlu} Sorumlu`, value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
         )
         .setFooter({
           text: "The Shinra | Ateşin Efsanesi",
@@ -72,7 +72,7 @@ module.exports = {
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("roleUpdate eventinde hata:", err);
+      // Silent fail for role update errors
     }
   },
 };

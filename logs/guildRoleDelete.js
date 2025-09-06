@@ -26,11 +26,11 @@ module.exports = {
           iconURL: executor ? executor.displayAvatarURL() : null,
         })
         .setDescription(
-          `${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${role.name}** (\`${role.id}\`) rolü sunucudan silindi.`
+          `${config.emojis.trash} ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${role.name}** (\`${role.id}\`) rolü sunucudan silindi.`
         )
         .addFields(
-          { name: "Rol", value: `${role.name} (\`${role.id}\`)`, inline: true },
-          { name: "Sorumlu Moderator", value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
+          { name: `${config.emojis.role} Rol`, value: `${role.name} (\`${role.id}\`)`, inline: true },
+          { name: `${config.emojis.sorumlu} Sorumlu`, value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
         )
         .setFooter({
           text: "The Shinra | Ateşin Efsanesi",
@@ -40,7 +40,7 @@ module.exports = {
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("guildRoleDelete eventinde hata:", err);
+      // Silent fail for role delete errors
     }
   },
 };

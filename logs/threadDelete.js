@@ -25,12 +25,12 @@ module.exports = {
           iconURL: executor ? executor.displayAvatarURL() : null,
         })
         .setDescription(
-          `🗑️ ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${thread.name}** (\`${thread.id}\`) alt başlığı silindi.`
+          `${config.emojis.trash} ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${thread.name}** (\`${thread.id}\`) alt başlığı silindi.`
         )
         .addFields(
-          { name: `Kanal`, value: `<#${thread.parentId}>`, inline: true },
-          { name: `Alt Başlık`, value: `${thread.name} (\`${thread.id}\`)`, inline: true },
-          { name: `Sorumlu Moderator`, value: `<@${executor ? executor.id : "Bilinmiyor"}>`, inline: true }
+          { name: `${config.emojis.channel} Kanal`, value: `<#${thread.parentId}>`, inline: true },
+          { name: `${config.emojis.channel} Alt Başlık`, value: `${thread.name} (\`${thread.id}\`)`, inline: true },
+          { name: `${config.emojis.sorumlu} Sorumlu`, value: `<@${executor ? executor.id : "Bilinmiyor"}>`, inline: true }
         )
         .setFooter({
           text: "The Shinra | Ateşin Efsanesi",
@@ -40,7 +40,7 @@ module.exports = {
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("threadDelete eventinde hata:", err);
+      // Silent fail for thread delete errors
     }
   },
 };

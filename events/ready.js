@@ -1,4 +1,3 @@
-const { REST, Routes, ChannelType } = require("discord.js");
 const Question = require("../models/Question.js");
 const setupIntervals = require("../tasks/interval.js");
 const config = require('../config');
@@ -9,38 +8,9 @@ module.exports = {
   once: true,
   async execute(client) {
 
-    // --- Slash komutları yükle ---
-    const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
-    try {
-      console.log("🔄 Komutlar güncelleniyor.");
-      const commandFiles = client.commands.map(cmd => cmd.data.toJSON());
-      // Discord’daki mevcut komutları al
-      const currentCommands = await rest.get(
-        Routes.applicationGuildCommands(client.user.id, process.env.GUILD_ID)
-      );
-
-      const normalize = (cmd) => ({
-        name: cmd.name,
-        description: cmd.description,
-        options: cmd.options ?? []
-      });
-
-      const local = JSON.stringify(commandFiles.map(normalize));
-      const remote = JSON.stringify(currentCommands.map(normalize));
-      if (local !== remote) {
-        const data = await rest.put(
-          Routes.applicationGuildCommands(client.user.id, process.env.GUILD_ID),
-          { body: commandFiles }
-        );
-        console.log("✅ Komutlar güncellendi:", data.map(c => c.name));
-      } else {
-        console.log("⚡ Komutlarda değişiklik yok, yükleme atlandı.");
-      }
-      console.log(`✅ ${client.user.tag} olarak giriş yapıldı.`);
-    } catch (err) {
-      console.error("Komut güncelleme hatası:", err);
-    }
-
+    // --- Slash komutlarını yükle ---
+    // Bu kısım kaldırıldı!
+    
     // --- Presence güncelle ---
     const updatePresence = () => {
       const guild = client.guilds.cache.first();
@@ -86,8 +56,11 @@ module.exports = {
           console.log("💡 Son 1 saatte mesaj yok, soru soruldu!");
         }
       } catch (err) {
-        console.error("Mesaj kontrol hatası:", err);
+        // Silent fail for message check errors
       }
     }, ONE_HOUR);
+    
+    console.log(`✅ ${client.user.tag} olarak giriş yapıldı.`);
   }
 };
+// Not: Slash komutlarının yüklenme kısmı kaldırıldı çünkü artık ayrı bir deploy scripti kullanılıyor.

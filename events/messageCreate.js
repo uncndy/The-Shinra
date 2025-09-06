@@ -1,4 +1,4 @@
-const Level = require("../models/Level");
+const User = require("../models/User");
 const config = require('../config');
 const MessageLog = require("../models/MessageLog");
 
@@ -16,37 +16,37 @@ module.exports = {
         timestamp: new Date()
       });
     } catch (err) {
-      console.error("Mesaj kaydı hatası:", err);
+      // Silent fail for message log errors
     }
 
     const userId = message.author.id;
     const channel = message.guild.channels.cache.get(config.channels.memberLog);
 
     try {
-      let userLevel = await Level.findOne({ userId, guildId: message.guild.id });
-      if (!userLevel) {
-        userLevel = new Level({ userId, guildId: message.guild.id, level: 1, xp: 0, rolesGiven: [] });
-        await userLevel.save();
+      let userData = await User.findOne({ userId, guildId: message.guild.id });
+      if (!userData) {
+        userData = new User({ userId, guildId: message.guild.id, level: 1, xp: 0, roles: [] });
+        await userData.save();
       }
 
-      userLevel.xp += 10;
+      userData.xp += 10;
 
       // Seviye atlama döngüsü: fazla XP'yi yeni seviyeye aktarır
       while (true) {
-        const nextLevel = Math.floor(100 * Math.pow(userLevel.level, 0.5));
-        if (userLevel.xp >= nextLevel) {
-          userLevel.level++;
-          userLevel.xp -= nextLevel;
+        const nextLevel = Math.floor(100 * Math.pow(userData.level, 0.5));
+        if (userData.xp >= nextLevel) {
+          userData.level++;
+          userData.xp -= nextLevel;
 
           if (channel) {
-            channel.send(`🎉 Tebrikler ${message.author}, seviye atladın! Şu anki seviyen: ${userLevel.level}`);
+            channel.send(`${config.emojis.star} Tebrikler ${message.author}, seviye atladın! Şu anki seviyen: ${userData.level}`);
           }
 
-          if (userLevel.level >= 10 && !userLevel.rolesGiven.includes(config.roles.star)) {
+          if (userData.level >= 10 && !userData.roles.includes(config.roles.star)) {
             const role = message.guild.roles.cache.get(config.roles.star);
             if (role) {
-              await message.member.roles.add(role).catch(console.error);
-              userLevel.rolesGiven.push(config.roles.star);
+              await message.member.roles.add(role).catch(() => {});
+              userData.roles.push(config.roles.star);
             }
           }
         } else {
@@ -54,9 +54,9 @@ module.exports = {
         }
       }
 
-      await userLevel.save();
+      await userData.save();
     } catch (err) {
-      console.error("XP sistemi hatası:", err);
+      // Silent fail for XP system errors
     }
   }
 };

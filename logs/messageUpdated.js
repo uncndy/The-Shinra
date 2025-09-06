@@ -27,26 +27,26 @@ module.exports = {
           iconURL: oldMessage.author.displayAvatarURL(),
         })
         .setDescription(
-          `✏️ ${oldMessage.author.tag} (\`${oldMessage.author.id}\`) tarafından gönderilen bir mesaj **${oldMessage.channel.name}** (\`${oldMessage.channel.id}\`) kanalında güncellendi.`
+          `${config.emojis.edit} ${oldMessage.author.tag} (\`${oldMessage.author.id}\`) tarafından gönderilen bir mesaj **${oldMessage.channel.name}** (\`${oldMessage.channel.id}\`) kanalında güncellendi.`
         )
         .addFields(
           {
-            name: "Kanal",
+            name: `${config.emojis.channel} Kanal`,
             value: `<#${oldMessage.channel.id}>`,
             inline: true,
           },
           {
-            name: "Sorumlu",
+            name: `${config.emojis.sorumlu} Sorumlu`,
             value: `<@${oldMessage.author.id}>`,
             inline: true,
           },
           {
-            name: "📄 Eski İçerik:",
+            name: `${config.emojis.question} Eski İçerik:`,
             value: `\`\`\`${oldContent.length > 1000 ? oldContent.slice(0, 1000) + "..." : oldContent}\`\`\``,
             inline: false,
           },
           {
-            name: "📄 Yeni İçerik:",
+            name: `${config.emojis.edit} Yeni İçerik:`,
             value: `\`\`\`${newContent.length > 1000 ? newContent.slice(0, 1000) + "..." : newContent}\`\`\``,
             inline: true,
           }
@@ -59,7 +59,7 @@ module.exports = {
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("messageEdit eventinde hata:", err);
+      // Silent fail for message edit errors
     }
   },
 };

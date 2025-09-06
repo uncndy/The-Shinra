@@ -26,11 +26,11 @@ module.exports = {
           iconURL: `${executor ? executor.displayAvatarURL() : ""}`,
         })
         .setDescription(
-          `🧵 ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${thread.name}** (\`${thread.id}\`) alt başlığı oluşturuldu.`
+          `${config.emojis.create} ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${thread.name}** (\`${thread.id}\`) alt başlığı oluşturuldu.`
         )
         .addFields(
-          { name: `Kanal`, value: `<#${thread.parentId}>`, inline: true },
-          { name: `Alt Başlık`, value: `${thread.name}`, inline: true },
+          { name: `${config.emojis.channel} Kanal`, value: `<#${thread.parentId}>`, inline: true },
+          { name: `${config.emojis.channel} Alt Başlık`, value: `${thread.name}`, inline: true },
         )
         .setFooter({
           text: "The Shinra | Ateşin Efsanesi",
@@ -40,7 +40,7 @@ module.exports = {
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("threadCreate eventinde hata:", err);
+      // Silent fail for thread create errors
     }
   },
 };

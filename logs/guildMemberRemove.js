@@ -25,10 +25,9 @@ module.exports = {
       } catch {}
 
       const embed = new EmbedBuilder()
-        .setDescription(`**${member.user.tag}** (\`${member.id}\`) sunucudan ayrıldı.`)
+        .setDescription(`${config.emojis.leave} **${member.user.tag}** (\`${member.id}\`) sunucudan ayrıldı.`)
         .addFields(
-          { name: "Kullanıcı", value: `${member.name} (\`${member.id}\`)`, inline: true },
-          { name: "Sorumlu Moderator", value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
+          { name: `${config.emojis.member} Kullanıcı`, value: `${member.name} (\`${member.id}\`)`, inline: true }
         )
         .setFooter({
           text: "The Shinra | Ateşin Efsanesi",
@@ -38,7 +37,7 @@ module.exports = {
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("guildMemberRemove eventinde hata:", err);
+      // Silent fail for guild member remove errors
     }
   },
 };

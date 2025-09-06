@@ -46,12 +46,12 @@ module.exports = {
           iconURL: `${executor ? executor.displayAvatarURL() : ""}`,
         })
         .setDescription(
-          `✏️ ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${oldThread.name}** (\`${newThread.id}\`) alt başlığı güncellendi.`
+          `${config.emojis.update} ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${oldThread.name}** (\`${newThread.id}\`) alt başlığı güncellendi.`
         )
         .addFields(
-            { name: "Kanal", value: `<#${newThread.parentId}>`, inline: true },
-            { name: "Değişiklikler", value: changes.join("\n"), inline: true },
-            { name: "Sorumlu Moderator", value: `<@${executor ? executor.id : "Bilinmiyor"}>`, inline: true }
+            { name: `${config.emojis.channel} Kanal`, value: `<#${newThread.parentId}>`, inline: true },
+            { name: `${config.emojis.update} Değişiklikler`, value: changes.join("\n"), inline: true },
+            { name: `${config.emojis.sorumlu} Sorumlu`, value: `<@${executor ? executor.id : "Bilinmiyor"}>`, inline: true }
         )
         .setFooter({
           text: "The Shinra | Ateşin Efsanesi",
@@ -61,7 +61,7 @@ module.exports = {
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("threadUpdate eventinde hata:", err);
+      // Silent fail for thread update errors
     }
   },
 };

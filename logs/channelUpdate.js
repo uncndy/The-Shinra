@@ -51,19 +51,19 @@ module.exports = {
           iconURL: executor ? executor.displayAvatarURL() : "",
         })
         .setDescription(
-          `📢 ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${oldChannel.name}** (\`${oldChannel.id}\`) güncellendi.`
+          `${config.emojis.update} ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${oldChannel.name}** (\`${oldChannel.id}\`) güncellendi.`
         )
         .addFields(
-            { name: "Kanal", value: `<#${oldChannel.id}>`, inline: true },
-            { name: "Değişiklikler", value: changes.length > 0 ? changes.join("\n") : "Yok", inline: true },
-            { name: "Sorumlu Moderator", value: executor ? `<@${executor.id}>` : `Bilinmiyor`, inline: true }
+            { name: `${config.emojis.channel} Kanal`, value: `<#${oldChannel.id}>`, inline: true },
+            { name: `${config.emojis.update} Değişiklikler`, value: changes.length > 0 ? changes.join("\n") : "Yok", inline: true },
+            { name: `${config.emojis.sorumlu} Sorumlu`, value: executor ? `<@${executor.id}>` : `Bilinmiyor`, inline: true }
         )
         .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: oldChannel.guild.iconURL() })
         .setTimestamp();
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("channelUpdate eventinde hata:", err);
+      // Silent fail for channel update errors
     }
   },
 };

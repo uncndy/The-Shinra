@@ -65,18 +65,18 @@ module.exports = {
 
       const embed = new EmbedBuilder()
         .setAuthor({ name: executor ? executor.tag : "Bilinmiyor", iconURL: executor ? executor.displayAvatarURL() : null })
-        .setDescription(`${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından sunucu ayarları güncellendi.`)
+        .setDescription(`${config.emojis.update} ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından sunucu ayarları güncellendi.`)
         .addFields(
-          { name: "Sunucu", value: `${newGuild.name}`, inline: true },
-          { name: "Değişiklikler", value: changes.join("\n") || "Yok", inline: true },
-          { name: "Sorumlu Moderator", value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
+          { name: `${config.emojis.server} Sunucu`, value: `${newGuild.name}`, inline: true },
+          { name: `${config.emojis.update} Değişiklikler`, value: changes.join("\n") || "Yok", inline: true },
+          { name: `${config.emojis.sorumlu} Sorumlu`, value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
         )
         .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: newGuild.iconURL() })
         .setTimestamp();
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("guildUpdate eventinde hata:", err);
+      // Silent fail for guild update errors
     }
   },
 };

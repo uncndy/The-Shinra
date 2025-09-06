@@ -1,12 +1,33 @@
 // logs/guildMemberUpdate.js
 const { EmbedBuilder, Events, AuditLogEvent } = require("discord.js");
 const config = require("../config");
+const User = require('../models/User');
 
 module.exports = {
   name: Events.GuildMemberUpdate,
   async execute(oldMember, newMember) {
     try {
       if (!oldMember.guild) return;
+
+      // User verisini bul veya oluştur
+      let userData = await User.findOne({ 
+        userId: newMember.id, 
+        guildId: newMember.guild.id 
+      });
+
+      if (!userData) {
+        userData = new User({
+          userId: newMember.id,
+          guildId: newMember.guild.id,
+          joinDate: newMember.joinedAt,
+          level: 1,
+          xp: 0,
+          roles: [],
+          previousNicknames: []
+        });
+      }
+
+      let updated = false;
 
       // --- ROL DEĞİŞİKLİKLERİ ---
       const oldRoles = oldMember.roles.cache;
@@ -21,19 +42,22 @@ module.exports = {
         type: AuditLogEvent.MemberRoleUpdate,
       });
       const roleLog = fetchedLogs.entries.first();
-      const executor = roleLog ? roleLog.executor : null;
 
       // Rol eklenmişse
       if (addedRoles.size > 0) {
+        // User modelindeki rolleri güncelle
+        userData.roles = newRoles.map(role => role.id);
+        updated = true;
+        console.log(`✅ ${newMember.user.tag} kullanıcısının rolleri güncellendi`);
+
         const logChannel = newMember.guild.channels.cache.get(config.logChannels.roleGived);
         if (logChannel) {
           const embed = new EmbedBuilder()
-            .setAuthor({ name: executor ? executor.tag : "Bilinmiyor", iconURL: executor ? executor.displayAvatarURL() : null })
-            .setDescription(`${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${newMember.user.tag}** (\`${newMember.id}\`) kullanıcısına rol verildi.`)
+            .setAuthor({ name: newMember.user.username, iconURL: newMember.user.displayAvatarURL() })
+            .setDescription(`${config.emojis.update} **${newMember.user.tag}** (\`${newMember.id}\`) kullanıcısına rol verildi.`)
             .addFields(
-              { name: "Kullanıcı", value: `${newMember}`, inline: true },
-              { name: "Verilen Roller", value: addedRoles.map(r => r.toString()).join("\n"), inline: true },
-              { name: "Sorumlu Moderator", value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
+              { name: `${config.emojis.member} Kullanıcı`, value: `${newMember}`, inline: true },
+              { name: `${config.emojis.update} Verilen Roller`, value: addedRoles.map(r => r.toString()).join("\n"), inline: true }
             )
             .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: newMember.guild.iconURL() })
             .setTimestamp();
@@ -43,15 +67,19 @@ module.exports = {
 
       // Rol alınmışsa
       if (removedRoles.size > 0) {
+        // User modelindeki rolleri güncelle
+        userData.roles = newRoles.map(role => role.id);
+        updated = true;
+        console.log(`✅ ${newMember.user.tag} kullanıcısının rolleri güncellendi`);
+
         const logChannel = newMember.guild.channels.cache.get(config.logChannels.roleRemoved);
         if (logChannel) {
           const embed = new EmbedBuilder()
-            .setAuthor({ name: executor ? executor.tag : "Bilinmiyor", iconURL: executor ? executor.displayAvatarURL() : null })
-            .setDescription(`${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${newMember.user.tag}** (\`${newMember.id}\`) kullanıcısından rol alındı.`)
+            .setAuthor({ name: newMember.user.username, iconURL: newMember.user.displayAvatarURL() })
+            .setDescription(`${config.emojis.update} **${newMember.user.tag}** (\`${newMember.id}\`) kullanıcısından rol alındı.`)
             .addFields(
-              { name: "Kullanıcı", value: `${newMember}`, inline: true },
-              { name: "Alınan Roller", value: removedRoles.map(r => r.toString()).join("\n"), inline: true },
-              { name: "Sorumlu Moderator", value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
+              { name: `${config.emojis.member} Kullanıcı`, value: `${newMember}`, inline: true },
+              { name: `${config.emojis.update} Alınan Roller`, value: removedRoles.map(r => r.toString()).join("\n"), inline: true }
             )
             .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: newMember.guild.iconURL() })
             .setTimestamp();
@@ -60,16 +88,32 @@ module.exports = {
       }
 
       // --- NICKNAME DEĞİŞİKLİKLERİ ---
-      if (oldMember.nickname !== newMember.nickname) {
+      const oldNickname = oldMember.nickname || oldMember.user.username;
+      const newNickname = newMember.nickname || newMember.user.username;
+
+      if (oldNickname !== newNickname && oldNickname) {
+        // Eski nick'i previousNicknames'e ekle
+        userData.previousNicknames.push({
+          nickname: oldNickname,
+          timestamp: new Date()
+        });
+
+        // Son 10 nick'i tut (eski kayıtları temizle)
+        if (userData.previousNicknames.length > 10) {
+          userData.previousNicknames = userData.previousNicknames.slice(-10);
+        }
+
+        updated = true;
+        console.log(`✅ ${newMember.user.tag} kullanıcısının nick'i değişti: "${oldNickname}" → "${newNickname}"`);
+
         const logChannel = newMember.guild.channels.cache.get(config.logChannels.changedNick);
         if (logChannel) {
           const embed = new EmbedBuilder()
-            .setAuthor({ name: executor ? executor.tag : "Bilinmiyor", iconURL: executor ? executor.displayAvatarURL() : null })
-            .setDescription(`${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${newMember.user.tag}** (\`${newMember.id}\`) kullanıcısının takma adı değiştirildi.`)
+            .setAuthor({ name: newMember.user.username, iconURL: newMember.user.displayAvatarURL() })
+            .setDescription(`${config.emojis.update} **${newMember.user.tag}** (\`${newMember.id}\`) kullanıcısının takma adı değiştirildi.`)
             .addFields(
-              { name: "Eski Nick", value: oldMember.nickname || "Yok", inline: true },
-              { name: "Yeni Nick", value: newMember.nickname || "Yok", inline: true },
-              { name: "Sorumlu", value: executor ? `<@${executor.id}>` : "Bilinmiyor", inline: true }
+              { name: `${config.emojis.update} Eski Nick`, value: oldNickname || "Yok", inline: true },
+              { name: `${config.emojis.update} Yeni Nick`, value: newNickname || "Yok", inline: true }
             )
             .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: newMember.guild.iconURL() })
             .setTimestamp();
@@ -77,8 +121,13 @@ module.exports = {
         }
       }
 
+      // Eğer herhangi bir değişiklik varsa kaydet
+      if (updated) {
+        await userData.save();
+      }
+
     } catch (err) {
-      console.error("guildMemberUpdate eventinde hata:", err);
+      // Silent fail for guild member update errors
     }
   },
 };

@@ -24,11 +24,11 @@ module.exports = {
                     iconURL: `${executor ? executor.displayAvatarURL() : ""}`,
                 })
                 .setDescription(
-                    `📢 ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${deletedChannel.name}** (\`${deletedChannel.id}\`) silindi.`
+                    `${config.emojis.trash} ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${deletedChannel.name}** (\`${deletedChannel.id}\`) silindi.`
                 )
                 .addFields(
-                    { name: "Kanal", value: `${deletedChannel.name} (\`${deletedChannel.id}\`)`, inline: true },
-                    { name: "Sorumlu Moderator", value: `${executor ? `<@${executor.id}>` : "Bilinmiyor"}`, inline: true }
+                    { name: `${config.emojis.channel} Kanal`, value: `${deletedChannel.name} (\`${deletedChannel.id}\`)`, inline: true },
+                    { name: `${config.emojis.sorumlu} Sorumlu`, value: `${executor ? `<@${executor.id}>` : "Bilinmiyor"}`, inline: true }
                 )
                 .setFooter({
                     text: "The Shinra | Ateşin Efsanesi",
@@ -38,7 +38,7 @@ module.exports = {
 
             logChannel.send({ embeds: [embed] });
         } catch (err) {
-            console.error("channelDelete eventinde hata:", err);
+            // Silent fail for channel delete errors
         }
     }
 };

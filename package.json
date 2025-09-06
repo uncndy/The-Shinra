@@ -1,20 +1,36 @@
 {
-  "name": "karsilayicibot",
-  "version": "1.0.0",
-  "description": "",
+  "name": "the-shinra-bot",
+  "version": "2.0.0",
+  "description": "The Shinra Discord Bot - Production Ready Community Management Bot",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "NODE_ENV=production node index.js",
+    "dev": "NODE_ENV=development node index.js",
+    "deploy": "node deploy.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "discord",
+    "bot",
+    "moderation",
+    "community",
+    "anime",
+    "manga"
+  ],
+  "author": "The Shinra Development Team",
+  "license": "PRIVATE",
   "type": "commonjs",
   "dependencies": {
+    "axios": "^1.11.0",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.1",
     "mongoose": "^8.17.1",
     "nanoid": "^5.1.5"
+  },
+  "devDependencies": {
+    "jest": "^30.1.3",
+    "supertest": "^7.1.4"
   }
 }

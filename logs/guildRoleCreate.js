@@ -23,11 +23,11 @@ module.exports = {
           iconURL: executor ? executor.displayAvatarURL() : null,
         })
         .setDescription(
-          `${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${role.name}** (\`${role.id}\`) rolü oluşturuldu.`
+          `${config.emojis.role} ${executor ? executor.tag : "Bilinmiyor"} (\`${executor ? executor.id : "Bilinmiyor"}\`) tarafından **${role.name}** (\`${role.id}\`) rolü oluşturuldu.`
         )
         .addFields(
-          { name: `Rol`, value: `\`${role.name}\``, inline: true },
-          { name: `Sorumlu Moderator`, value: `<@${executor ? executor.id : "Bilinmiyor"}>`, inline: true }
+          { name: `${config.emojis.role} Rol`, value: `\`${role.name}\``, inline: true },
+          { name: `${config.emojis.sorumlu} Sorumlu`, value: `<@${executor ? executor.id : "Bilinmiyor"}>`, inline: true }
         )
         .setFooter({
           text: "The Shinra | Ateşin Efsanesi",
@@ -37,7 +37,7 @@ module.exports = {
 
       await logChannel.send({ embeds: [embed] });
     } catch (err) {
-      console.error("roleCreate eventinde hata:", err);
+      // Silent fail for role create errors
     }
   },
 };

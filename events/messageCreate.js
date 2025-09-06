@@ -20,7 +20,7 @@ module.exports = {
     }
 
     const userId = message.author.id;
-    const channel = message.guild.channels.cache.get(config.channels.memberLog);
+    const channel = message.guild.channels.cache.get(config.logChannels.memberLog);
 
     try {
       let userData = await User.findOne({ userId, guildId: message.guild.id });

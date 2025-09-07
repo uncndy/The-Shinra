@@ -4,6 +4,7 @@ const config = require("../config");
 const User = require('../models/User');
 const axios = require('axios');
 const rateLimiter = require('../utils/rateLimiter');
+const AntiRaidSystem = require('../utils/antiRaid');
 
 module.exports = {
   name: Events.GuildMemberAdd,
@@ -11,18 +12,49 @@ module.exports = {
     try {
       if (!member.guild) return;
 
-      // Yeni kullanıcıyı veritabanına ekle
+      // Anti-raid kontrolü
+      if (member.client.antiRaid) {
+        await member.client.antiRaid.checkRaid(member);
+      }
+
+      // Yeni kullanıcıyı veritabanına ekle (önce kontrol et)
       try {
-        const newUser = new User({
-          userId: member.id,
-          guildId: member.guild.id,
-          joinDate: new Date(),
-          level: 1,
-          xp: 0,
-          roles: []
+        // Önce kullanıcının veritabanında olup olmadığını kontrol et
+        const existingUser = await User.findOne({ 
+          userId: member.id, 
+          guildId: member.guild.id 
         });
-        await newUser.save();
-        console.log(`✅ Yeni kullanıcı eklendi: ${member.user.tag}`);
+
+        if (!existingUser) {
+          // Kullanıcı yoksa yeni oluştur
+          const newUser = new User({
+            userId: member.id,
+            guildId: member.guild.id,
+            joinDate: new Date(),
+            level: 1,
+            xp: 0,
+            roles: []
+          });
+          await newUser.save();
+        } else {
+          // Kullanıcı varsa joinDate'i güncelle ve rolleri geri ver
+          existingUser.joinDate = new Date();
+          await existingUser.save();
+          
+          // Veritabanındaki rolleri kullanıcıya geri ver
+          if (existingUser.roles && existingUser.roles.length > 0) {
+            for (const roleId of existingUser.roles) {
+              try {
+                const role = member.guild.roles.cache.get(roleId);
+                if (role && role.id !== member.guild.id) { // @everyone rolü değilse
+                  await member.roles.add(role);
+                }
+              } catch (err) {
+                // Rol verilemezse sessizce geç
+              }
+            }
+          }
+        }
       } catch (err) {
         // Silent fail for user creation errors
       }
@@ -36,17 +68,35 @@ module.exports = {
         channel.send({ content: `<@${member.id}>`, embeds: [embed] });
       }
 
-      // FindCord API ile sicil sorgusu
+      // 1. BASIT LOG EMBED - Her zaman gönderilir
+      const logChannel = member.guild.channels.cache.get(config.logChannels.memberJoin);
+      if (!logChannel) {
+        return;
+      }
+
+      // Basit embed
+      const simpleEmbed = new EmbedBuilder()
+        .setDescription(`${config.emojis.join} ${member.user.tag} (\`${member.id}\`) sunucuya katıldı.`)
+        .addFields(
+          {name: `${config.emojis.member} Katılım Tarihi`, value: `<t:${Math.floor(member.joinedAt.getTime() / 1000)}:F>`, inline: true},
+          {name: `${config.emojis.member} Discord'a Katılma Tarihi`, value: `<t:${Math.floor(member.user.createdAt.getTime() / 1000)}:F>`, inline: true},
+          {name: `${config.emojis.member} Davet linki`, value: `\`https://discord.gg/${member.guild.vanityURLCode || 'N/A'}\``, inline: true},
+        )
+        .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: member.guild.iconURL() })
+        .setTimestamp()
+
+      await logChannel.send({ embeds: [simpleEmbed] });
+
+      // 2. FINDCORD API EMBED - API varsa gönderilir
       try {
         const apiKey = process.env.FINDCORD_API;
         if (!apiKey) {
           return;
         }
 
-        // Rate limiting kontrolü (otomatik join için daha gevşek)
+        // Rate limiting kontrolü
         const rateLimit = rateLimiter.checkLimit(`auto_${member.id}`, 'findcord');
         if (!rateLimit.allowed) {
-          console.log(`⚠️ Rate limit: ${member.user.tag} için sicil sorgusu atlandı`);
           return;
         }
 
@@ -66,12 +116,8 @@ module.exports = {
         const topAge = memberInfo.TopAge || "Bilinmiyor";
         const topSex = memberInfo.TopSex || "Bilinmiyor";
 
-        // Log kanalına sicil bilgilerini gönder
-        const logChannel = member.guild.channels.cache.get(config.logChannels.memberJoin);
-        if (!logChannel) return;
-
-        // Tek embed: Tüm bilgiler
-        const embed = new EmbedBuilder()
+        // FindCord API embed'i
+        const apiEmbed = new EmbedBuilder()
           .setAuthor({ 
             name: `${member.user.tag} - Sicil Sorgusu`, 
             iconURL: member.user.displayAvatarURL() 
@@ -79,12 +125,12 @@ module.exports = {
           .setDescription(`**Kullanıcı:** ${member.user} (\`${member.id}\`)\n**Katılım Tarihi:** <t:${Math.floor(Date.now() / 1000)}:F>`)
           .addFields(
             {
-              name: "👤 Kimlik Bilgileri",
+              name: `${config.emojis.member} Kimlik Bilgileri`,
               value: `**İsim:** \`${topName}\`\n**Yaş:** \`${topAge}\`\n**Cinsiyet:** \`${topSex}\``,
               inline: true
             },
             {
-              name: "📊 Sicil İstatistikleri",
+              name: `${config.emojis.stats} Sicil İstatistikleri`,
               value: `**Toplam Sicil Kaydı:** \`${sicil.length}\`\n**Son Kayıt:** \`${sicil.length > 0 ? sicil[0].Type : "Yok"}\``,
               inline: true
             }
@@ -99,30 +145,26 @@ module.exports = {
             `${index + 1}. **${record.GuildName}** | **${record.Type || "Bilinmiyor"}** - <t:${Math.floor(record.Date / 1000)}:R>\n> ${record.Reason || "Sebep belirtilmemiş"}`
           ).join('\n');
 
-          embed.addFields({
-            name: "📋 Sicil Kayıtları",
+          apiEmbed.addFields({
+            name: `${config.emojis.edit} Sicil Kayıtları`,
             value: sicilText.length > 1024 ? sicilText.substring(0, 1020) + "..." : sicilText,
             inline: false
           });
         } else {
-          embed.addFields({
-            name: "📋 Sicil Kayıtları",
+          apiEmbed.addFields({
+            name: `${config.emojis.edit} Sicil Kayıtları`,
             value: "Sicil kaydı bulunamadı",
             inline: false
           });
         }
 
-        // Tek embed'i gönder
-        await logChannel.send({ embeds: [embed] });
-
-        console.log(`✅ ${member.user.tag} için sicil sorgusu log kanalına gönderildi.`);
+        // FindCord API embed'ini gönder
+        await logChannel.send({ embeds: [apiEmbed] });
 
       } catch (error) {
-        return;
       }
 
     } catch (err) {
-      // Silent fail for guild member add errors
     }
   },
 };

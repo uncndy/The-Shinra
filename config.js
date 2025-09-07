@@ -1,8 +1,7 @@
-const Question = require("./models/Question");
-
 module.exports = {
     channels: {
-        generalChat: "1405946096785555647" // Genel sohbet kanalı
+        generalChat: "1405946096785555647",             // Genel sohbet kanalı
+        giveawayChannel: "1412063352024334407"          // Çekiliş kanalı
     },
     logChannels: {
         warnLog: "1407348241632329878",                 // Uyarı takip log kanalı
@@ -26,7 +25,9 @@ module.exports = {
         memberJoin: "1406926493212217410",              // Üye katıldı log kanalı
         memberLeave: "1406926532907368478",             // Üye ayrıldı log kanalı
         changedNick: "1406926722645102593",             // Kullanıcı adı değişti log kanalı
-        serverSettingsUpdated: "1406927987668160563"    // Sunucu ayarları güncellendi log kanalı
+        serverSettingsUpdated: "1406927987668160563",    // Sunucu ayarları güncellendi log kanalı
+        backupLog: "1414294010029408399",                // Backup log kanalı
+        antiRaidLog: "1414294126513356941"                // Anti-raid log kanalı
     },
     roles: {
         muted: "1407356511533142029",                   // Susturulmuş rolü
@@ -38,33 +39,36 @@ module.exports = {
         supportStaff: "1406010861331677274",            // Support Staff rolü
         eventStaff: "1406010749549019357",              // Event Staff rolü
         star: "1406955479124410481",                    // Yıldız rolü
+        giveaway: "1405882453977202759",                // Çekiliş rolü
+        revive: "1405882425741152317",                  // Revive rolü
         ownerUserID: "879126288097493003"               // Bot sahibi ID
     },
     emojis: {
-        warning: "<:warning:1413475087570567268>",
-        cancel: "<:cancel:1413475060303528009>",
-        stats: "<:stats:1413475085120966718>",
-        info: "<:info:1413475080008372324>",
-        success: "<:success:1413475063679680552>",
-        target: "<:target:1413483643711651923>",
-        xp: "<:xp:1413519652046245888>",
-        level: "<:level:1413519655435501658>",
-        ping : "<:ping:1413520678640029696>",
-        status: "<:status:1413521734065328310>",
-        question: "<:question:1413522618396577802>",
-        moderator: "<:staff:1413523777664323727>",
-        time: "<:time:1413475076505866321>",
-        edit: "<:edit:1413539849276882984>",
-        trash: "<:trash:1413538052185260144>",
-        create: "<:create:1413540304262402191>",
-        give: "<:give:1413540665026936852>",
-        channel: "<:channel:1413541172156301342>",
-        sorumlu: "<:sorumlu:1413541304549507212>",
-        update: "<:update:1413541917056041013>",
-        leave: "<:leave:1413542377452474580>",
-        join: "<:join:1413542379662610462>",
-        member: "<:member:1413542819116875837>",
-        role: "<:role:1413544110005944513>",
-        server: "<:server:1413545025622642780>"
+        warning: "<:warning:1413475087570567268>",      // Uyarı emoji
+        cancel: "<:cancel:1413475060303528009>",        // İptal emoji
+        stats: "<:stats:1413475085120966718>",          // İstatistikler emoji
+        info: "<:info:1413475080008372324>",            // Bilgi emoji
+        success: "<:success:1413475063679680552>",      // Başarı emoji
+        target: "<:target:1413483643711651923>",        // Hedef emoji
+        xp: "<:xp:1413519652046245888>",                // XP emoji
+        level: "<:level:1413519655435501658>",          // Seviye emoji
+        ping : "<:ping:1413520678640029696>",           // Ping emoji    
+        status: "<:status:1413521734065328310>",        // Durum emoji
+        question: "<:question:1413522618396577802>",    // Soru emoji
+        moderator: "<:staff:1413523777664323727>",      // Moderator emoji
+        time: "<:time:1413475076505866321>",            // Zaman emoji
+        edit: "<:edit:1413539849276882984>",            // Düzenleme emoji
+        trash: "<:trash:1413538052185260144>",          // Çöp emoji
+        create: "<:create:1413540304262402191>",        // Oluşturma emoji
+        give: "<:give:1413540665026936852>",            // Verme emoji    
+        channel: "<:channel:1413541172156301342>",      // Kanal emoji
+        sorumlu: "<:sorumlu:1413541304549507212>",      // Sorumlu emoji
+        update: "<:update:1413541917056041013>",        // Güncelleme emoji
+        leave: "<:leave:1413542377452474580>",          // Ayrılma emoji
+        join: "<:join:1413542379662610462>",            // Katılma emoji
+        member: "<:member:1413542819116875837>",        // Üye emoji
+        role: "<:role:1413544110005944513>",            // Rol emoji
+        server: "<:server:1413545025622642780>",        // Sunucu emoji
+        gift: "<:gift:1414272380741615800>"             // Hediye emoji
     }
 };

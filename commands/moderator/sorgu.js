@@ -78,7 +78,6 @@ module.exports = {
           discordUser = await interaction.client.users.fetch(user.id);
           userAvatar = discordUser.displayAvatarURL({ dynamic: true, size: 256 });
         } catch (error) {
-          console.log("Discord kullanıcı avatarı alınamadı:", error.message);
         }
 
         // Tek embed: Tüm bilgiler

@@ -6,9 +6,12 @@
 const mongoose = require('mongoose');
 const fs = require('fs').promises;
 const path = require('path');
+const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
+const config = require('../config');
 
 class BackupManager {
-  constructor() {
+  constructor(client) {
+    this.client = client;
     this.backupDir = path.join(__dirname, '../backups');
     this.ensureBackupDir();
   }
@@ -44,15 +47,15 @@ class BackupManager {
         const collectionName = collection.name;
         const data = await mongoose.connection.db.collection(collectionName).find({}).toArray();
         backup.collections[collectionName] = data;
-        console.log(`✅ Backed up collection: ${collectionName} (${data.length} documents)`);
       }
 
       await fs.writeFile(backupFile, JSON.stringify(backup, null, 2));
-      console.log(`✅ Backup created: ${backupFile}`);
+      
+      // Discord'a backup dosyasını gönder
+      await this.sendBackupToDiscord(backupFile, backup);
       
       return backupFile;
     } catch (error) {
-      console.error('❌ Backup failed:', error);
       throw error;
     }
   }
@@ -65,19 +68,15 @@ class BackupManager {
     try {
       const backupData = JSON.parse(await fs.readFile(backupFile, 'utf8'));
       
-      console.log(`🔄 Restoring backup from ${backupData.timestamp}`);
       
       for (const [collectionName, documents] of Object.entries(backupData.collections)) {
         if (documents.length > 0) {
           await mongoose.connection.db.collection(collectionName).deleteMany({});
           await mongoose.connection.db.collection(collectionName).insertMany(documents);
-          console.log(`✅ Restored collection: ${collectionName} (${documents.length} documents)`);
         }
       }
       
-      console.log('✅ Backup restoration completed');
     } catch (error) {
-      console.error('❌ Backup restoration failed:', error);
       throw error;
     }
   }
@@ -100,7 +99,6 @@ class BackupManager {
         
       return backupFiles;
     } catch (error) {
-      console.error('❌ Failed to list backups:', error);
       return [];
     }
   }
@@ -118,13 +116,68 @@ class BackupManager {
         
         for (const backup of toDelete) {
           await fs.unlink(backup.path);
-          console.log(`🗑️ Deleted old backup: ${backup.name}`);
         }
         
-        console.log(`✅ Cleaned ${toDelete.length} old backups`);
       }
     } catch (error) {
-      console.error('❌ Failed to clean old backups:', error);
+      // Silent error handling
+    }
+  }
+
+  /**
+   * Send backup file to Discord channel
+   * @param {string} backupFile - Path to backup file
+   * @param {Object} backupData - Backup data object
+   */
+  async sendBackupToDiscord(backupFile, backupData) {
+    try {
+      if (!this.client) return;
+
+      const backupChannel = this.client.channels.cache.get(config.logChannels.backupLog);
+      if (!backupChannel) return;
+
+      // Backup dosyasını Discord attachment olarak hazırla
+      const attachment = new AttachmentBuilder(backupFile, { 
+        name: path.basename(backupFile) 
+      });
+
+      // Backup bilgilerini hesapla
+      const totalDocuments = Object.values(backupData.collections)
+        .reduce((total, docs) => total + docs.length, 0);
+      
+      const fileSize = (await fs.stat(backupFile)).size;
+      const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+
+      // Embed oluştur
+      const embed = new EmbedBuilder()
+        .setTitle(`${config.emojis.success} Database Backup Oluşturuldu`)
+        .setDescription(`**${path.basename(backupFile)}** dosyası başarıyla oluşturuldu.`)
+        .addFields(
+          { 
+            name: `${config.emojis.info} Backup Bilgileri`, 
+            value: `**Tarih:** ${new Date(backupData.timestamp).toLocaleString('tr-TR')}\n**Versiyon:** ${backupData.version}\n**Toplam Doküman:** ${totalDocuments}\n**Dosya Boyutu:** ${fileSizeMB} MB`, 
+            inline: true 
+          },
+          { 
+            name: `${config.emojis.stats} Koleksiyonlar`, 
+            value: Object.entries(backupData.collections)
+              .map(([name, docs]) => `**${name}:** ${docs.length} doküman`)
+              .join('\n') || 'Koleksiyon bulunamadı', 
+            inline: true 
+          }
+        )
+        .setColor(0x00FF00)
+        .setFooter({ text: "The Shinra | Otomatik Backup Sistemi", iconURL: this.client.user?.displayAvatarURL() })
+        .setTimestamp();
+
+      // Mesajı gönder
+      await backupChannel.send({ 
+        embeds: [embed], 
+        files: [attachment] 
+      });
+
+    } catch (error) {
+      // Silent error handling
     }
   }
 
@@ -137,16 +190,13 @@ class BackupManager {
     
     setInterval(async () => {
       try {
-        console.log('🔄 Starting scheduled backup...');
         await this.createBackup();
         await this.cleanOldBackups(5);
-        console.log('✅ Scheduled backup completed');
       } catch (error) {
-        console.error('❌ Scheduled backup failed:', error);
+        // Silent error handling
       }
     }, intervalMs);
     
-    console.log(`📅 Scheduled backups every ${intervalHours} hours`);
   }
 }
 

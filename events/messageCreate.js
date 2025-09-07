@@ -39,7 +39,7 @@ module.exports = {
           userData.xp -= nextLevel;
 
           if (channel) {
-            channel.send(`${config.emojis.star} Tebrikler ${message.author}, seviye atladın! Şu anki seviyen: ${userData.level}`);
+            channel.send(`${config.emojis.xp} Tebrikler ${message.author}, seviye atladın! Şu anki seviyen: ${userData.level}`);
           }
 
           if (userData.level >= 10 && !userData.roles.includes(config.roles.star)) {

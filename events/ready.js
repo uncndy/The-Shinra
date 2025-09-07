@@ -11,6 +11,52 @@ module.exports = {
     // --- Slash komutlarını yükle ---
     // Bu kısım kaldırıldı!
     
+    // --- Çekiliş verilerini başlat ---
+    client.giveaways = new Map();
+    
+    // --- Anti-raid sistemini başlat ---
+    const AntiRaidSystem = require('../utils/antiRaid');
+    client.antiRaid = new AntiRaidSystem();
+    
+    // --- Backup sistemini başlat ---
+    const BackupManager = require('../utils/backup');
+    client.backupManager = new BackupManager(client);
+    client.backupManager.scheduleBackups(24); // Her 24 saatte bir backup
+    
+    // Aktif çekilişleri veritabanından yükle
+    const Giveaway = require("../models/Giveaway");
+    const activeGiveaways = await Giveaway.find({ active: true });
+    
+    for (const giveaway of activeGiveaways) {
+      const timeLeft = giveaway.endTime.getTime() - Date.now();
+      
+      if (timeLeft > 0) {
+        // Çekiliş hala aktif, RAM'e yükle
+        client.giveaways.set(giveaway.messageId, {
+          messageId: giveaway.messageId,
+          channelId: giveaway.channelId,
+          guildId: giveaway.guildId,
+          prize: giveaway.prize,
+          winnerCount: giveaway.winnerCount,
+          endTime: giveaway.endTime,
+          participants: giveaway.participants,
+          creator: giveaway.creator,
+          active: true
+        });
+        
+        // Timeout'u yeniden başlat
+        setTimeout(async () => {
+          const cekilisModule = require("../commands/moderator/cekilis");
+          await cekilisModule.endGiveaway(client, giveaway.messageId);
+        }, timeLeft);
+      } else {
+        // Süre dolmuş, çekilişi bitir
+        const cekilisModule = require("../commands/moderator/cekilis");
+        await cekilisModule.endGiveaway(client, giveaway.messageId);
+      }
+    }
+  
+    
     // --- Presence güncelle ---
     const updatePresence = () => {
       const guild = client.guilds.cache.first();
@@ -53,7 +99,6 @@ module.exports = {
 
           const question = questions[Math.floor(Math.random() * questions.length)].text;
           await channel.send(`${mention} ${question}`);
-          console.log("💡 Son 1 saatte mesaj yok, soru soruldu!");
         }
       } catch (err) {
         // Silent fail for message check errors
@@ -63,4 +108,3 @@ module.exports = {
     console.log(`✅ ${client.user.tag} olarak giriş yapıldı.`);
   }
 };
-// Not: Slash komutlarının yüklenme kısmı kaldırıldı çünkü artık ayrı bir deploy scripti kullanılıyor.

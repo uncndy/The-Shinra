@@ -43,13 +43,17 @@ module.exports = {
       });
       const roleLog = fetchedLogs.entries.first();
 
+      // Rol değişiklikleri varsa User modelini güncelle
+      if (addedRoles.size > 0 || removedRoles.size > 0) {
+        // User modelindeki rolleri güncelle (sadece @everyone hariç)
+        userData.roles = newRoles
+          .filter(role => role.id !== newMember.guild.id) // @everyone rolünü hariç tut
+          .map(role => role.id);
+        updated = true;
+      }
+
       // Rol eklenmişse
       if (addedRoles.size > 0) {
-        // User modelindeki rolleri güncelle
-        userData.roles = newRoles.map(role => role.id);
-        updated = true;
-        console.log(`✅ ${newMember.user.tag} kullanıcısının rolleri güncellendi`);
-
         const logChannel = newMember.guild.channels.cache.get(config.logChannels.roleGived);
         if (logChannel) {
           const embed = new EmbedBuilder()
@@ -67,11 +71,6 @@ module.exports = {
 
       // Rol alınmışsa
       if (removedRoles.size > 0) {
-        // User modelindeki rolleri güncelle
-        userData.roles = newRoles.map(role => role.id);
-        updated = true;
-        console.log(`✅ ${newMember.user.tag} kullanıcısının rolleri güncellendi`);
-
         const logChannel = newMember.guild.channels.cache.get(config.logChannels.roleRemoved);
         if (logChannel) {
           const embed = new EmbedBuilder()
@@ -104,7 +103,6 @@ module.exports = {
         }
 
         updated = true;
-        console.log(`✅ ${newMember.user.tag} kullanıcısının nick'i değişti: "${oldNickname}" → "${newNickname}"`);
 
         const logChannel = newMember.guild.channels.cache.get(config.logChannels.changedNick);
         if (logChannel) {

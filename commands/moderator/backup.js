@@ -40,7 +40,7 @@ module.exports = {
     }
 
     const subcommand = interaction.options.getSubcommand();
-    const backupManager = new BackupManager();
+    const backupManager = client.backupManager || new BackupManager(client);
 
     await interaction.deferReply({ flags: ["Ephemeral"] });
 

@@ -69,6 +69,7 @@ module.exports = {
         member: "<:member:1413542819116875837>",        // Üye emoji
         role: "<:role:1413544110005944513>",            // Rol emoji
         server: "<:server:1413545025622642780>",        // Sunucu emoji
-        gift: "<:gift:1414272380741615800>"             // Hediye emoji
+        gift: "<:gift:1414272380741615800>",            // Hediye emoji
+        booster: "<:booster:1414597572525555836>"       // Booster emoji
     }
 };

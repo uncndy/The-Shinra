@@ -30,7 +30,12 @@ module.exports = {
 
       // Eğer şu anda boost yapıyorsa, mevcut boost sayısını al
       if (member.premiumSince) {
-        boostData.totalBoosts = member.premiumSubscriptionCount || 1;
+        // Discord API'den boost sayısını al - daha güvenilir yöntem
+        const subscriptionCount = member.premiumSubscriptionCount;
+        console.log(`User ${userId}: premiumSubscriptionCount = ${subscriptionCount}, premiumSince = ${member.premiumSince}`);
+        
+        // Eğer premiumSubscriptionCount null veya undefined ise, 1 olarak ayarla
+        boostData.totalBoosts = subscriptionCount !== null && subscriptionCount !== undefined ? subscriptionCount : 1;
         boostData.firstBoostDate = member.premiumSince;
         boostData.lastBoostDate = member.premiumSince;
       }

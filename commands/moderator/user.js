@@ -71,34 +71,6 @@ module.exports = {
             inline: true
           }
         );
-
-      // Booster bilgilerini ekle
-      if (userData.booster) {
-        const booster = userData.booster;
-        let boosterInfo = "";
-        
-        if (booster.isBooster) {
-          const firstBoostDate = booster.firstBoostDate ? `<t:${Math.floor(booster.firstBoostDate.getTime() / 1000)}:F>` : "Bilinmiyor";
-          const lastBoostDate = booster.lastBoostDate ? `<t:${Math.floor(booster.lastBoostDate.getTime() / 1000)}:F>` : "Bilinmiyor";
-          const totalBoostDays = Math.floor(booster.totalBoostDuration / (1000 * 60 * 60 * 24));
-          
-          boosterInfo = `**Durum:** \`Aktif\`\n**Aktif Boost:** \`${booster.boostCount}\`\n**İlk Boost:** ${firstBoostDate}\n**Son Boost:** ${lastBoostDate}\n**Toplam Süre:** \`${totalBoostDays} gün\``;
-        } else if (booster.boostCount > 0) {
-          const firstBoostDate = booster.firstBoostDate ? `<t:${Math.floor(booster.firstBoostDate.getTime() / 1000)}:F>` : "Bilinmiyor";
-          const totalBoostDays = Math.floor(booster.totalBoostDuration / (1000 * 60 * 60 * 24));
-          
-          boosterInfo = `**Durum:** ${config.emojis.cancel} Pasif\n**Toplam Boost:** \`${booster.boostCount}\`\n**İlk Boost:** ${firstBoostDate}\n**Toplam Süre:** \`${totalBoostDays} gün\``;
-        } else {
-          boosterInfo = `**Durum:** ${config.emojis.cancel} Hiç boost yapmamış`;
-        }
-
-        embed.addFields({
-          name: `${config.emojis.gift} Booster Bilgileri`,
-          value: boosterInfo,
-          inline: false
-        });
-      }
-
       embed.setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: interaction.guild.iconURL() })
            .setTimestamp();
 

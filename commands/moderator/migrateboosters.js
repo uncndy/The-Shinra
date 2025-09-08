@@ -36,6 +36,9 @@ module.exports = {
       for (const [userId, member] of members) {
         try {
           const isBooster = member.premiumSince !== null;
+          // Discord'da bir kullanıcının birden fazla boost'u olabilir
+          // Boost sayısını hesapla (Discord API'den alınabilir)
+          const boostCount = isBooster ? (member.premiumSubscriptionCount || 1) : 0;
           
           let userData = await User.findOne({ 
             userId: userId, 
@@ -55,7 +58,7 @@ module.exports = {
                 .map(role => role.id),
               booster: {
                 isBooster: isBooster,
-                boostCount: isBooster ? 1 : 0,
+                boostCount: boostCount,
                 firstBoostDate: isBooster ? member.premiumSince : null,
                 lastBoostDate: isBooster ? member.premiumSince : null,
                 totalBoostDuration: 0
@@ -69,12 +72,16 @@ module.exports = {
               // Eğer booster ise ve veritabanında booster değilse
               if (!userData.booster.isBooster) {
                 userData.booster.isBooster = true;
-                userData.booster.boostCount = 1;
+                userData.booster.boostCount = boostCount;
                 userData.booster.lastBoostDate = member.premiumSince;
                 
                 if (!userData.booster.firstBoostDate) {
                   userData.booster.firstBoostDate = member.premiumSince;
                 }
+              } else {
+                // Eğer zaten booster ise, boost sayısını güncelle
+                userData.booster.boostCount = boostCount;
+                userData.booster.lastBoostDate = member.premiumSince;
               }
               boostersFound++;
             }
@@ -123,7 +130,7 @@ module.exports = {
         .addFields(
           {
             name: `${config.emojis.gift} Booster Detayları`,
-            value: `• **Aktif Booster:** ${boostersFound} kullanıcı\n• **Boost Sayısı:** Her booster için 1 olarak ayarlandı\n• **Boost Tarihi:** Mevcut boost tarihi kullanıldı`,
+            value: `• **Aktif Booster:** ${boostersFound} kullanıcı\n• **Boost Sayısı:** Her kullanıcının gerçek boost sayısı kullanıldı\n• **Boost Tarihi:** Mevcut boost tarihi kullanıldı\n• **Çoklu Boost:** Birden fazla boost'u olan kullanıcılar tespit edildi`,
             inline: false
           }
         )

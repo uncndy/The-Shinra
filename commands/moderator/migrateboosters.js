@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, AuditLogEvent } = require("discord.js");
 const User = require("../../models/User");
 const config = require("../../config");
 
@@ -6,6 +6,100 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("migrateboosters")
     .setDescription("Sunucudaki tüm booster'ları User modeline kaydeder."),
+
+  /**
+   * Audit log'dan kullanıcının boost geçmişini alır
+   * @param {Guild} guild - Discord sunucusu
+   * @param {string} userId - Kullanıcı ID'si
+   * @returns {Object} Boost verileri
+   */
+  async getBoostDataFromAuditLog(guild, userId) {
+    try {
+      const boostData = {
+        totalBoosts: 0,
+        firstBoostDate: null,
+        lastBoostDate: null,
+        boostHistory: []
+      };
+
+      // Boost başlatma loglarını al
+      const boostStartLogs = await guild.fetchAuditLogs({
+        limit: 100,
+        type: AuditLogEvent.MemberUpdate,
+        user: userId
+      });
+
+      // Boost durdurma loglarını al
+      const boostEndLogs = await guild.fetchAuditLogs({
+        limit: 100,
+        type: AuditLogEvent.MemberUpdate,
+        user: userId
+      });
+
+      // Tüm audit logları birleştir ve sırala
+      const allLogs = [...boostStartLogs.entries.values(), ...boostEndLogs.entries.values()]
+        .filter(entry => {
+          const changes = entry.changes;
+          if (!changes) return false;
+          
+          // Premium subscription değişikliklerini kontrol et
+          const premiumChange = changes.find(change => change.key === 'premium_since');
+          return premiumChange !== undefined;
+        })
+        .sort((a, b) => b.createdTimestamp - a.createdTimestamp);
+
+      // Boost geçmişini analiz et
+      let currentBoostCount = 0;
+      let firstBoost = null;
+      let lastBoost = null;
+
+      for (const entry of allLogs) {
+        const changes = entry.changes;
+        const premiumChange = changes.find(change => change.key === 'premium_since');
+        
+        if (premiumChange) {
+          if (premiumChange.new && !premiumChange.old) {
+            // Boost başladı
+            currentBoostCount++;
+            const boostDate = new Date(premiumChange.new);
+            
+            if (!firstBoost) firstBoost = boostDate;
+            lastBoost = boostDate;
+            
+            boostData.boostHistory.push({
+              type: 'start',
+              date: boostDate,
+              count: currentBoostCount
+            });
+          } else if (!premiumChange.new && premiumChange.old) {
+            // Boost bitti
+            if (currentBoostCount > 0) {
+              currentBoostCount--;
+              boostData.boostHistory.push({
+                type: 'end',
+                date: entry.createdAt,
+                count: currentBoostCount
+              });
+            }
+          }
+        }
+      }
+
+      boostData.totalBoosts = currentBoostCount;
+      boostData.firstBoostDate = firstBoost;
+      boostData.lastBoostDate = lastBoost;
+
+      return boostData;
+    } catch (error) {
+      console.error('Audit log boost data fetch error:', error);
+      return {
+        totalBoosts: 0,
+        firstBoostDate: null,
+        lastBoostDate: null,
+        boostHistory: []
+      };
+    }
+  },
 
   async execute(interaction) {
     // Yetki kontrolü
@@ -36,9 +130,12 @@ module.exports = {
       for (const [userId, member] of members) {
         try {
           const isBooster = member.premiumSince !== null;
-          // Discord'da bir kullanıcının birden fazla boost'u olabilir
-          // Boost sayısını hesapla (Discord API'den alınabilir)
-          const boostCount = isBooster ? (member.premiumSubscriptionCount || 1) : 0;
+          
+          // Audit log'dan doğru boost verilerini al
+          const boostData = await this.getBoostDataFromAuditLog(guild, userId);
+          const boostCount = boostData.totalBoosts;
+          const firstBoostDate = boostData.firstBoostDate;
+          const lastBoostDate = boostData.lastBoostDate;
           
           let userData = await User.findOne({ 
             userId: userId, 
@@ -59,8 +156,8 @@ module.exports = {
               booster: {
                 isBooster: isBooster,
                 boostCount: boostCount,
-                firstBoostDate: isBooster ? member.premiumSince : null,
-                lastBoostDate: isBooster ? member.premiumSince : null,
+                firstBoostDate: firstBoostDate,
+                lastBoostDate: lastBoostDate,
                 totalBoostDuration: 0
               }
             });
@@ -73,15 +170,20 @@ module.exports = {
               if (!userData.booster.isBooster) {
                 userData.booster.isBooster = true;
                 userData.booster.boostCount = boostCount;
-                userData.booster.lastBoostDate = member.premiumSince;
+                userData.booster.lastBoostDate = lastBoostDate;
                 
                 if (!userData.booster.firstBoostDate) {
-                  userData.booster.firstBoostDate = member.premiumSince;
+                  userData.booster.firstBoostDate = firstBoostDate;
                 }
               } else {
                 // Eğer zaten booster ise, boost sayısını güncelle
                 userData.booster.boostCount = boostCount;
-                userData.booster.lastBoostDate = member.premiumSince;
+                userData.booster.lastBoostDate = lastBoostDate;
+                
+                // İlk boost tarihini güncelle (eğer daha eski bir tarih bulunduysa)
+                if (firstBoostDate && (!userData.booster.firstBoostDate || firstBoostDate < userData.booster.firstBoostDate)) {
+                  userData.booster.firstBoostDate = firstBoostDate;
+                }
               }
               boostersFound++;
             }
@@ -130,7 +232,7 @@ module.exports = {
         .addFields(
           {
             name: `${config.emojis.gift} Booster Detayları`,
-            value: `• **Aktif Booster:** ${boostersFound} kullanıcı\n• **Boost Sayısı:** Her kullanıcının gerçek boost sayısı kullanıldı\n• **Boost Tarihi:** Mevcut boost tarihi kullanıldı\n• **Çoklu Boost:** Birden fazla boost'u olan kullanıcılar tespit edildi`,
+            value: `• **Aktif Booster:** ${boostersFound} kullanıcı\n• **Boost Sayısı:** Audit log'dan doğru boost sayıları alındı\n• **Boost Tarihi:** Audit log'dan gerçek boost tarihleri kullanıldı\n• **Çoklu Boost:** Birden fazla boost'u olan kullanıcılar doğru şekilde tespit edildi\n• **Veri Kaynağı:** Discord Audit Logs`,
             inline: false
           }
         )

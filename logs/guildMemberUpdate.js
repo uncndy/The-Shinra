@@ -113,7 +113,6 @@ module.exports = {
                 { name: `${config.emojis.gift} Aktif Boost`, value: `${userData.booster.boostCount}`, inline: true },
                 { name: `${config.emojis.time} Boost Tarihi`, value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
               )
-              .setColor(0xFF73FA) // Discord Nitro rengi
               .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: newMember.guild.iconURL() })
               .setTimestamp();
             await logChannel.send({ embeds: [embed] });
@@ -146,7 +145,6 @@ module.exports = {
                 { name: `${config.emojis.gift} Kalan Boost`, value: `${userData.booster.boostCount}`, inline: true },
                 { name: `${config.emojis.time} Toplam Boost Süresi`, value: `${totalBoostDays} gün`, inline: true }
               )
-              .setColor(0xFF6B6B) // Kırmızı renk
               .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: newMember.guild.iconURL() })
               .setTimestamp();
             await logChannel.send({ embeds: [embed] });

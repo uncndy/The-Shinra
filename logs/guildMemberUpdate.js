@@ -86,6 +86,69 @@ module.exports = {
         }
       }
 
+      // --- BOOSTER DURUMU DEĞİŞİKLİKLERİ ---
+      const wasBooster = oldMember.premiumSince !== null;
+      const isBooster = newMember.premiumSince !== null;
+
+      if (wasBooster !== isBooster) {
+        if (isBooster) {
+          // Kullanıcı boost yapmaya başladı
+          userData.booster.isBooster = true;
+          userData.booster.boostCount += 1;
+          userData.booster.lastBoostDate = new Date();
+          
+          if (!userData.booster.firstBoostDate) {
+            userData.booster.firstBoostDate = new Date();
+          }
+          
+          updated = true;
+
+          const logChannel = newMember.guild.channels.cache.get(config.logChannels.roleGived);
+          if (logChannel) {
+            const embed = new EmbedBuilder()
+              .setAuthor({ name: newMember.user.username, iconURL: newMember.user.displayAvatarURL() })
+              .setDescription(`${config.emojis.gift} **${newMember.user.tag}** (\`${newMember.id}\`) sunucuyu boost etmeye başladı!`)
+              .addFields(
+                { name: `${config.emojis.member} Kullanıcı`, value: `${newMember}`, inline: true },
+                { name: `${config.emojis.gift} Toplam Boost`, value: `${userData.booster.boostCount}`, inline: true },
+                { name: `${config.emojis.time} Boost Tarihi`, value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
+              )
+              .setColor(0xFF73FA) // Discord Nitro rengi
+              .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: newMember.guild.iconURL() })
+              .setTimestamp();
+            await logChannel.send({ embeds: [embed] });
+          }
+        } else {
+          // Kullanıcı boost yapmayı bıraktı
+          userData.booster.isBooster = false;
+          
+          // Boost süresini hesapla ve toplam süreye ekle
+          if (userData.booster.lastBoostDate) {
+            const boostDuration = Date.now() - userData.booster.lastBoostDate.getTime();
+            userData.booster.totalBoostDuration += boostDuration;
+          }
+          
+          updated = true;
+
+          const logChannel = newMember.guild.channels.cache.get(config.logChannels.roleRemoved);
+          if (logChannel) {
+            const totalBoostDays = Math.floor(userData.booster.totalBoostDuration / (1000 * 60 * 60 * 24));
+            const embed = new EmbedBuilder()
+              .setAuthor({ name: newMember.user.username, iconURL: newMember.user.displayAvatarURL() })
+              .setDescription(`${config.emojis.cancel} **${newMember.user.tag}** (\`${newMember.id}\`) sunucuyu boost etmeyi bıraktı.`)
+              .addFields(
+                { name: `${config.emojis.member} Kullanıcı`, value: `${newMember}`, inline: true },
+                { name: `${config.emojis.gift} Toplam Boost`, value: `${userData.booster.boostCount}`, inline: true },
+                { name: `${config.emojis.time} Toplam Boost Süresi`, value: `${totalBoostDays} gün`, inline: true }
+              )
+              .setColor(0xFF6B6B) // Kırmızı renk
+              .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: newMember.guild.iconURL() })
+              .setTimestamp();
+            await logChannel.send({ embeds: [embed] });
+          }
+        }
+      }
+
       // --- NICKNAME DEĞİŞİKLİKLERİ ---
       const oldNickname = oldMember.nickname || oldMember.user.username;
       const newNickname = newMember.nickname || newMember.user.username;

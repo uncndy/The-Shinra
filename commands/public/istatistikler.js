@@ -51,6 +51,28 @@ module.exports = {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
 
+    // Booster bilgileri
+    let boosterInfo = "";
+    if (userData && userData.booster) {
+      const booster = userData.booster;
+      if (booster.isBooster) {
+        const firstBoostDate = booster.firstBoostDate ? `<t:${Math.floor(booster.firstBoostDate.getTime() / 1000)}:F>` : "Bilinmiyor";
+        const lastBoostDate = booster.lastBoostDate ? `<t:${Math.floor(booster.lastBoostDate.getTime() / 1000)}:F>` : "Bilinmiyor";
+        const totalBoostDays = Math.floor(booster.totalBoostDuration / (1000 * 60 * 60 * 24));
+        
+        boosterInfo = `• **Booster Durumu:** ${config.emojis.gift} Aktif\n• **Toplam Boost:** \`${booster.boostCount}\`\n• **İlk Boost:** ${firstBoostDate}\n• **Son Boost:** ${lastBoostDate}\n• **Toplam Boost Süresi:** \`${totalBoostDays} gün\``;
+      } else if (booster.boostCount > 0) {
+        const firstBoostDate = booster.firstBoostDate ? `<t:${Math.floor(booster.firstBoostDate.getTime() / 1000)}:F>` : "Bilinmiyor";
+        const totalBoostDays = Math.floor(booster.totalBoostDuration / (1000 * 60 * 60 * 24));
+        
+        boosterInfo = `• **Booster Durumu:** ${config.emojis.cancel} Pasif\n• **Toplam Boost:** \`${booster.boostCount}\`\n• **İlk Boost:** ${firstBoostDate}\n• **Toplam Boost Süresi:** \`${totalBoostDays} gün\``;
+      } else {
+        boosterInfo = `• **Booster Durumu:** ${config.emojis.cancel} Hiç boost yapmamış`;
+      }
+    } else {
+      boosterInfo = `• **Booster Durumu:** ${config.emojis.cancel} Hiç boost yapmamış`;
+    }
+
     // --- Embedler ---
     const statsEmbed = new EmbedBuilder()
       .setAuthor({ name: `${user.username} - İstatistikleri`, iconURL: user.displayAvatarURL() })
@@ -58,6 +80,7 @@ module.exports = {
       .setDescription(`**${user.username}** (\`${user.id}\`) kullanıcısına ait istatistikler:`)
       .addFields(
         { name: `${config.emojis.stats} Genel İstatistikler`, value: `• **Son 24 Saat:** \`${last24h} mesaj\`\n• **Son 7 Gün:** \`${last7d} mesaj\`\n• **Son 30 Gün:** \`${last30d} mesaj\`\n• **Toplam Mesaj:** \`${totalMessages} mesaj\`\n• **Son Mesaj:** ${lastMessageTime}`, inline: false },
+        { name: `${config.emojis.gift} Booster Bilgileri`, value: boosterInfo, inline: false },
         {
           name: `${config.emojis.stats} Kanal İstatistikleri`, value: topChannels.map(([channelId, count], i) => {
             const channel = interaction.guild.channels.cache.get(channelId);

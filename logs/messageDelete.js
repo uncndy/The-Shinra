@@ -21,7 +21,7 @@ module.exports = {
           iconURL: message.author.displayAvatarURL(),
         })
         .setDescription(
-          `${config.emojis.trash} ${config.emojis.trash} ${message.author.tag} (\`${message.author.id}\`) tarafından gönderilen bir mesaj **${message.channel.name}** (\`${message.channel.id}\`) kanalında silindi.`
+          `${config.emojis.trash} ${message.author.tag} (\`${message.author.id}\`) tarafından gönderilen bir mesaj **${message.channel.name}** (\`${message.channel.id}\`) kanalında silindi.`
         )
         .addFields(
           {

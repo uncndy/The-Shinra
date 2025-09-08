@@ -33,12 +33,31 @@ module.exports = {
             joinDate: new Date(),
             level: 1,
             xp: 0,
-            roles: []
+            roles: [],
+            booster: {
+              isBooster: member.premiumSince !== null,
+              boostCount: member.premiumSince !== null ? 1 : 0,
+              firstBoostDate: member.premiumSince || null,
+              lastBoostDate: member.premiumSince || null,
+              totalBoostDuration: 0
+            }
           });
           await newUser.save();
         } else {
           // Kullanıcı varsa joinDate'i güncelle ve rolleri geri ver
           existingUser.joinDate = new Date();
+          
+          // Booster durumunu güncelle
+          if (member.premiumSince !== null && !existingUser.booster.isBooster) {
+            existingUser.booster.isBooster = true;
+            existingUser.booster.boostCount += 1;
+            existingUser.booster.lastBoostDate = new Date();
+            
+            if (!existingUser.booster.firstBoostDate) {
+              existingUser.booster.firstBoostDate = new Date();
+            }
+          }
+          
           await existingUser.save();
           
           // Veritabanındaki rolleri kullanıcıya geri ver

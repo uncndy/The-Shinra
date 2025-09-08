@@ -82,7 +82,7 @@ module.exports = {
           const lastBoostDate = booster.lastBoostDate ? `<t:${Math.floor(booster.lastBoostDate.getTime() / 1000)}:F>` : "Bilinmiyor";
           const totalBoostDays = Math.floor(booster.totalBoostDuration / (1000 * 60 * 60 * 24));
           
-          boosterInfo = `**Durum:** ${config.emojis.gift} Aktif\n**Aktif Boost:** \`${booster.boostCount}\`\n**İlk Boost:** ${firstBoostDate}\n**Son Boost:** ${lastBoostDate}\n**Toplam Süre:** \`${totalBoostDays} gün\``;
+          boosterInfo = `**Durum:** \`Aktif\`\n**Aktif Boost:** \`${booster.boostCount}\`\n**İlk Boost:** ${firstBoostDate}\n**Son Boost:** ${lastBoostDate}\n**Toplam Süre:** \`${totalBoostDays} gün\``;
         } else if (booster.boostCount > 0) {
           const firstBoostDate = booster.firstBoostDate ? `<t:${Math.floor(booster.firstBoostDate.getTime() / 1000)}:F>` : "Bilinmiyor";
           const totalBoostDays = Math.floor(booster.totalBoostDuration / (1000 * 60 * 60 * 24));
@@ -95,7 +95,7 @@ module.exports = {
         embed.addFields({
           name: `${config.emojis.gift} Booster Bilgileri`,
           value: boosterInfo,
-          inline: true
+          inline: false
         });
       }
 

@@ -22,76 +22,85 @@ module.exports = {
         boostHistory: []
       };
 
-      // Boost başlatma loglarını al
-      const boostStartLogs = await guild.fetchAuditLogs({
-        limit: 100,
-        type: AuditLogEvent.MemberUpdate,
-        user: userId
-      });
+      // Önce mevcut üyeyi al ve mevcut boost durumunu kontrol et
+      const member = await guild.members.fetch(userId).catch(() => null);
+      if (!member) {
+        return boostData;
+      }
 
-      // Boost durdurma loglarını al
-      const boostEndLogs = await guild.fetchAuditLogs({
-        limit: 100,
-        type: AuditLogEvent.MemberUpdate,
-        user: userId
-      });
+      // Eğer şu anda boost yapıyorsa, mevcut boost sayısını al
+      if (member.premiumSince) {
+        boostData.totalBoosts = member.premiumSubscriptionCount || 1;
+        boostData.firstBoostDate = member.premiumSince;
+        boostData.lastBoostDate = member.premiumSince;
+      }
 
-      // Tüm audit logları birleştir ve sırala
-      const allLogs = [...boostStartLogs.entries.values(), ...boostEndLogs.entries.values()]
-        .filter(entry => {
+      // Audit log'dan boost geçmişini al
+      try {
+        const auditLogs = await guild.fetchAuditLogs({
+          limit: 100,
+          type: AuditLogEvent.MemberUpdate
+        });
+
+        // Bu kullanıcıya ait boost değişikliklerini filtrele
+        const userBoostLogs = auditLogs.entries
+          .filter(entry => entry.targetId === userId)
+          .filter(entry => {
+            const changes = entry.changes;
+            if (!changes) return false;
+            return changes.some(change => change.key === 'premium_since');
+          })
+          .sort((a, b) => a.createdTimestamp - b.createdTimestamp); // Eski tarihten yeniye
+
+        // Boost geçmişini analiz et
+        let totalBoosts = 0;
+        let firstBoost = null;
+        let lastBoost = null;
+
+        for (const entry of userBoostLogs) {
           const changes = entry.changes;
-          if (!changes) return false;
-          
-          // Premium subscription değişikliklerini kontrol et
           const premiumChange = changes.find(change => change.key === 'premium_since');
-          return premiumChange !== undefined;
-        })
-        .sort((a, b) => b.createdTimestamp - a.createdTimestamp);
-
-      // Boost geçmişini analiz et
-      let currentBoostCount = 0;
-      let firstBoost = null;
-      let lastBoost = null;
-
-      for (const entry of allLogs) {
-        const changes = entry.changes;
-        const premiumChange = changes.find(change => change.key === 'premium_since');
-        
-        if (premiumChange) {
-          if (premiumChange.new && !premiumChange.old) {
-            // Boost başladı
-            currentBoostCount++;
-            const boostDate = new Date(premiumChange.new);
-            
-            if (!firstBoost) firstBoost = boostDate;
-            lastBoost = boostDate;
-            
-            boostData.boostHistory.push({
-              type: 'start',
-              date: boostDate,
-              count: currentBoostCount
-            });
-          } else if (!premiumChange.new && premiumChange.old) {
-            // Boost bitti
-            if (currentBoostCount > 0) {
-              currentBoostCount--;
+          
+          if (premiumChange) {
+            if (premiumChange.new && !premiumChange.old) {
+              // Boost başladı
+              totalBoosts++;
+              const boostDate = new Date(premiumChange.new);
+              
+              if (!firstBoost) firstBoost = boostDate;
+              lastBoost = boostDate;
+              
+              boostData.boostHistory.push({
+                type: 'start',
+                date: boostDate,
+                count: totalBoosts
+              });
+            } else if (!premiumChange.new && premiumChange.old) {
+              // Boost bitti - ama toplam boost sayısını azaltmayalım
               boostData.boostHistory.push({
                 type: 'end',
                 date: entry.createdAt,
-                count: currentBoostCount
+                count: totalBoosts
               });
             }
           }
         }
-      }
 
-      boostData.totalBoosts = currentBoostCount;
-      boostData.firstBoostDate = firstBoost;
-      boostData.lastBoostDate = lastBoost;
+        // Eğer audit log'dan veri bulunduysa, onu kullan
+        if (totalBoosts > 0) {
+          boostData.totalBoosts = totalBoosts;
+          boostData.firstBoostDate = firstBoost;
+          boostData.lastBoostDate = lastBoost;
+        }
+
+      } catch (auditError) {
+        console.log('Audit log fetch failed, using current member data:', auditError.message);
+        // Audit log alınamazsa mevcut veriyi kullan
+      }
 
       return boostData;
     } catch (error) {
-      console.error('Audit log boost data fetch error:', error);
+      console.error('Boost data fetch error:', error);
       return {
         totalBoosts: 0,
         firstBoostDate: null,
@@ -137,6 +146,16 @@ module.exports = {
           const firstBoostDate = boostData.firstBoostDate;
           const lastBoostDate = boostData.lastBoostDate;
           
+          // Debug: Boost verilerini logla
+          if (isBooster && boostCount === 0) {
+            console.log(`Debug - User ${userId}: isBooster=${isBooster}, premiumSince=${member.premiumSince}, premiumSubscriptionCount=${member.premiumSubscriptionCount}, auditBoostCount=${boostCount}`);
+          }
+          
+          // Fallback: Eğer audit log'dan veri alınamadıysa, mevcut Discord API verilerini kullan
+          const finalBoostCount = boostCount > 0 ? boostCount : (isBooster ? (member.premiumSubscriptionCount || 1) : 0);
+          const finalFirstBoostDate = firstBoostDate || (isBooster ? member.premiumSince : null);
+          const finalLastBoostDate = lastBoostDate || (isBooster ? member.premiumSince : null);
+          
           let userData = await User.findOne({ 
             userId: userId, 
             guildId: guild.id 
@@ -155,9 +174,9 @@ module.exports = {
                 .map(role => role.id),
               booster: {
                 isBooster: isBooster,
-                boostCount: boostCount,
-                firstBoostDate: firstBoostDate,
-                lastBoostDate: lastBoostDate,
+                boostCount: finalBoostCount,
+                firstBoostDate: finalFirstBoostDate,
+                lastBoostDate: finalLastBoostDate,
                 totalBoostDuration: 0
               }
             });
@@ -169,20 +188,20 @@ module.exports = {
               // Eğer booster ise ve veritabanında booster değilse
               if (!userData.booster.isBooster) {
                 userData.booster.isBooster = true;
-                userData.booster.boostCount = boostCount;
-                userData.booster.lastBoostDate = lastBoostDate;
+                userData.booster.boostCount = finalBoostCount;
+                userData.booster.lastBoostDate = finalLastBoostDate;
                 
                 if (!userData.booster.firstBoostDate) {
-                  userData.booster.firstBoostDate = firstBoostDate;
+                  userData.booster.firstBoostDate = finalFirstBoostDate;
                 }
               } else {
                 // Eğer zaten booster ise, boost sayısını güncelle
-                userData.booster.boostCount = boostCount;
-                userData.booster.lastBoostDate = lastBoostDate;
+                userData.booster.boostCount = finalBoostCount;
+                userData.booster.lastBoostDate = finalLastBoostDate;
                 
                 // İlk boost tarihini güncelle (eğer daha eski bir tarih bulunduysa)
-                if (firstBoostDate && (!userData.booster.firstBoostDate || firstBoostDate < userData.booster.firstBoostDate)) {
-                  userData.booster.firstBoostDate = firstBoostDate;
+                if (finalFirstBoostDate && (!userData.booster.firstBoostDate || finalFirstBoostDate < userData.booster.firstBoostDate)) {
+                  userData.booster.firstBoostDate = finalFirstBoostDate;
                 }
               }
               boostersFound++;

@@ -110,7 +110,7 @@ module.exports = {
               .setDescription(`${config.emojis.gift} **${newMember.user.tag}** (\`${newMember.id}\`) sunucuyu boost etmeye başladı!`)
               .addFields(
                 { name: `${config.emojis.member} Kullanıcı`, value: `${newMember}`, inline: true },
-                { name: `${config.emojis.gift} Toplam Boost`, value: `${userData.booster.boostCount}`, inline: true },
+                { name: `${config.emojis.gift} Aktif Boost`, value: `${userData.booster.boostCount}`, inline: true },
                 { name: `${config.emojis.time} Boost Tarihi`, value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
               )
               .setColor(0xFF73FA) // Discord Nitro rengi
@@ -121,6 +121,11 @@ module.exports = {
         } else {
           // Kullanıcı boost yapmayı bıraktı
           userData.booster.isBooster = false;
+          
+          // Boost sayısını azalt (minimum 0)
+          if (userData.booster.boostCount > 0) {
+            userData.booster.boostCount -= 1;
+          }
           
           // Boost süresini hesapla ve toplam süreye ekle
           if (userData.booster.lastBoostDate) {
@@ -138,7 +143,7 @@ module.exports = {
               .setDescription(`${config.emojis.cancel} **${newMember.user.tag}** (\`${newMember.id}\`) sunucuyu boost etmeyi bıraktı.`)
               .addFields(
                 { name: `${config.emojis.member} Kullanıcı`, value: `${newMember}`, inline: true },
-                { name: `${config.emojis.gift} Toplam Boost`, value: `${userData.booster.boostCount}`, inline: true },
+                { name: `${config.emojis.gift} Kalan Boost`, value: `${userData.booster.boostCount}`, inline: true },
                 { name: `${config.emojis.time} Toplam Boost Süresi`, value: `${totalBoostDays} gün`, inline: true }
               )
               .setColor(0xFF6B6B) // Kırmızı renk

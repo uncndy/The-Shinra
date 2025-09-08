@@ -35,7 +35,6 @@ module.exports = {
         try {
           // Audit log'dan boost geçmişini al
           const auditLogs = await guild.fetchAuditLogs({
-            limit: 100,
             type: AuditLogEvent.MemberUpdate
           });
 

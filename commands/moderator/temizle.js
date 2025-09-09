@@ -13,7 +13,7 @@ module.exports = {
 
   async execute(interaction) {
     // Yetki kontrolü
-    if (!interaction.member.roles.cache.has(config.roles.moderator) && interaction.user.id !== config.roles.ownerUserID) {
+    if (!interaction.member.roles.cache.has(config.roles.moderator) && interaction.user.id !== config.owners.sphinx) {
       return interaction.reply({ 
         content: `${config.emojis.cancel} Bu komutu kullanmak için Moderatör rolüne sahip olmalısın veya bot sahibi olmalısın.`, 
         flags: ["Ephemeral"] 

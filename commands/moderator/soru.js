@@ -30,7 +30,7 @@ module.exports = {
         .setDescription("Veritabanındaki tüm soruları listeler (sayfalı).")),
 
   async execute(interaction) {
-    if (!interaction.member.roles.cache.has(config.roles.moderator) && !interaction.member.roles.cache.has(config.roles.staff) && interaction.user.id !== config.roles.ownerUserID) {
+    if (!interaction.member.roles.cache.has(config.roles.moderator) && !interaction.member.roles.cache.has(config.roles.staff) && interaction.user.id !== config.owners.sphinx) {
       return interaction.reply({
         content: `${config.emojis.cancel} Bu komutu kullanmak için Moderatör, Staff rolüne sahip olmalısın veya bot sahibi olmalısın.`,
         flags: ["Ephemeral"]

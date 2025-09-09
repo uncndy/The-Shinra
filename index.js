@@ -9,7 +9,6 @@ const { Client, GatewayIntentBits, Collection, REST, Routes } = require("discord
 const mongoose = require("mongoose");
 const fs = require("fs");
 const PerformanceMonitor = require("./utils/performanceMonitor");
-const BackupManager = require("./utils/backup");
 
 // Environment variables validation
 const requiredEnvVars = [
@@ -78,14 +77,6 @@ client.commands = new Collection();
 
 // Initialize performance monitor
 client.performanceMonitor = new PerformanceMonitor(client);
-
-// Initialize backup manager
-client.backupManager = new BackupManager();
-
-// Schedule automatic backups in production (every 24 hours)
-if (isProduction) {
-  client.backupManager.scheduleBackups(24);
-}
 
 // Global error handlers
 process.on('uncaughtException', (error) => {

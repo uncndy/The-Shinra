@@ -9,7 +9,7 @@ module.exports = {
 
   async execute(interaction, client) {
     // Yetki kontrolü
-    if (interaction.user.id !== config.roles.ownerUserID) {
+    if (interaction.user.id !== config.owners.sphinx) {
       return interaction.reply({
         content: `${config.emojis.cancel} Bu komutu kullanmak için bot sahibi olmalısın.`,
         flags: ["Ephemeral"]

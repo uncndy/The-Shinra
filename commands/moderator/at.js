@@ -1,4 +1,12 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ComponentType,
+  PermissionFlagsBits
+} = require("discord.js");
 const Sanction = require("../../models/Sanction");
 const config = require('../../config');
 
@@ -7,92 +15,90 @@ module.exports = {
     .setName("at")
     .setDescription("Bir kullanıcıyı sunucudan atar ve kaydeder.")
     .addUserOption(option =>
-      option.setName("kullanıcı")
+      option
+        .setName("kullanıcı")
         .setDescription("Atılacak kullanıcı")
         .setRequired(true)
     )
     .addStringOption(option =>
-      option.setName("sebep")
+      option
+        .setName("sebep")
         .setDescription("Kick sebebi")
         .setRequired(false)
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers), // v15 için önerilen kullanım
 
   async execute(interaction) {
     // Yetki kontrolü
-    if (!interaction.member.roles.cache.has(config.roles.moderator) && !interaction.member.roles.cache.has(config.roles.staff) && interaction.user.id !== config.roles.ownerUserID) {
+    if (
+      !interaction.member.roles.cache.has(config.roles.moderator) &&
+      !interaction.member.roles.cache.has(config.roles.staff) &&
+      interaction.user.id !== config.owners.sphinx
+    ) {
       return interaction.reply({
         content: `${config.emojis.cancel} Bu komutu kullanmak için Moderatör, Staff rolüne sahip olmalısın veya bot sahibi olmalısın.`,
-        flags: ["Ephemeral"]
+        ephemeral: true
       });
     }
 
     const user = interaction.options.getUser("kullanıcı");
     const reason = interaction.options.getString("sebep") || "Sebep belirtilmedi";
 
-    // Kullanıcı kontrolleri
     if (user.id === interaction.user.id) {
       return interaction.reply({
         content: `${config.emojis.cancel} Kendini atamazsın.`,
-        flags: ["Ephemeral"]
+        ephemeral: true
       });
     }
-
     if (user.id === interaction.client.user.id) {
       return interaction.reply({
         content: `${config.emojis.cancel} Botu atamazsın.`,
-        flags: ["Ephemeral"]
+        ephemeral: true
       });
     }
 
     try {
       const member = await interaction.guild.members.fetch(user.id);
 
-      // Rol hiyerarşisi kontrolü
       if (member.roles.highest.position >= interaction.member.roles.highest.position) {
         return interaction.reply({
           content: `${config.emojis.cancel} Bu kullanıcıyı atamazsın - rol hiyerarşisi nedeniyle.`,
-          flags: ["Ephemeral"]
+          ephemeral: true
         });
       }
-      
-      // Onay butonu oluşturma
+
+      // Onay butonları
       const confirmationRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId('confirm_kick')
-          .setLabel('Evet, At')
+          .setCustomId("confirm_kick")
+          .setLabel("Evet, At")
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-          .setCustomId('cancel_kick')
-          .setLabel('Hayır, İptal Et')
-          .setStyle(ButtonStyle.Secondary),
+          .setCustomId("cancel_kick")
+          .setLabel("Hayır, İptal Et")
+          .setStyle(ButtonStyle.Secondary)
       );
 
-      // Kullanıcıya onay mesajı gönderme
       const confirmationMessage = await interaction.reply({
-        content: `${config.emojis.warning} **@${user.username}** kullanıcısını \`${reason}\` sebebiyle atmak istediğine emin misin?`,
+        content: `${config.emojis.warning} **${user.tag}** kullanıcısını \`${reason}\` sebebiyle atmak istediğine emin misin?`,
         components: [confirmationRow],
-        flags: ["Ephemeral"],
-        withResponse: true
+        flags: ["Ephemeral"]
       });
 
-      const collector = interaction.channel.createMessageComponentCollector({ 
-          filter: i => i.user.id === interaction.user.id, 
-          componentType: ComponentType.Button, 
-          time: 30000 
+      // v15 Collector kullanımı (çok değişmeyecek)
+      const collector = confirmationMessage.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 30_000,
+        filter: i => i.user.id === interaction.user.id
       });
 
-      collector.on('collect', async i => {
-        if (i.user.id !== interaction.user.id) {
-          return i.reply({ content: `${config.emojis.cancel} Bu butonu sen kullanamazsın.`, flags: ["Ephemeral"] });
-        }
-
-        if (i.customId === 'confirm_kick') {
-          // Atma işlemini gerçekleştir
+      collector.on("collect", async i => {
+        if (i.customId === "confirm_kick") {
           await i.update({ content: `${config.emojis.time} Kullanıcı atılıyor...`, components: [] });
 
           await member.kick(reason);
 
-          // Veritabanına kaydet
+          // Sanction DB kaydı
           const lastSanction = await Sanction.findOne({ guildId: interaction.guild.id }).sort({ sanctionId: -1 });
           const sanctionId = lastSanction ? lastSanction.sanctionId + 1 : 1;
 
@@ -107,7 +113,7 @@ module.exports = {
           });
           await newKick.save();
 
-          // Embed oluştur
+          // Log embed
           const embed = new EmbedBuilder()
             .setAuthor({ name: user.username, iconURL: user.displayAvatarURL() })
             .setThumbnail(user.displayAvatarURL())
@@ -120,16 +126,15 @@ module.exports = {
             .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: interaction.guild.iconURL() })
             .setTimestamp();
 
-          // Log kanalına gönder
           const logChannel = interaction.guild.channels.cache.get(config.logChannels.kickLog);
           if (logChannel) logChannel.send({ embeds: [embed] });
 
-          await i.editReply({ 
-            content: `> ${config.emojis.success} **@${user.username}** kullanıcısı başarıyla atıldı.`, 
-            components: [] 
+          await interaction.followUp({
+            content: `> ${config.emojis.success} **${user.tag}** kullanıcısı başarıyla atıldı.`,
+            ephemeral: true
           });
 
-        } else if (i.customId === 'cancel_kick') {
+        } else if (i.customId === "cancel_kick") {
           await i.update({
             content: `${config.emojis.cancel} İşlem iptal edildi.`,
             components: []
@@ -138,7 +143,7 @@ module.exports = {
         collector.stop();
       });
 
-      collector.on('end', async collected => {
+      collector.on("end", async collected => {
         if (collected.size === 0) {
           try {
             await confirmationMessage.edit({
@@ -150,13 +155,12 @@ module.exports = {
           }
         }
       });
-      
+
     } catch (err) {
-      // Silent fail for kick errors
       await interaction.editReply({
-          content: `${config.emojis.cancel} Kullanıcı atılamadı.`,
-          components: []
-        });
+        content: `${config.emojis.cancel} Kullanıcı atılamadı.`,
+        components: []
+      });
     }
   }
 };

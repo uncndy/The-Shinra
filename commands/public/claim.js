@@ -20,7 +20,7 @@ module.exports = {
           guildId,
           level: 1,
           xp: 0,
-          roles: []
+          roles: [],
         });
         await userData.save();
       }
@@ -42,17 +42,16 @@ module.exports = {
 
       let response = `${config.emojis.xp} Günlük ödülünü aldın! **+${xpEarned} XP** eklendi.`;
       if (leveledUp) {
-        response += `\n${config.emojis.star} Seviye atladın! Yeni seviyen: **${userData.level}**`;
+        response += `\n${config.emojis.xp} Seviye atladın! Yeni seviyen: **${userData.level}**`;
       }
 
       await interaction.reply({ content: response, flags: ["Ephemeral"] });
-
     } catch (err) {
-      // Silent fail for claim command errors
+      console.error(err);
       await interaction.reply({
         content: `${config.emojis.cancel} Bir hata oluştu, lütfen tekrar dene.`,
-        flags: ["Ephemeral"]
+        flags: ["Ephemeral"],
       });
     }
-  }
+  },
 };

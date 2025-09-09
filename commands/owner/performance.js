@@ -18,7 +18,7 @@ module.exports = {
 
   async execute(interaction, client) {
     // Yetki kontrolü
-    if (interaction.user.id !== config.roles.ownerUserID) { // Bot sahibinin ID'si
+    if (interaction.user.id !== config.owners.sphinx) { // Bot sahibinin ID'si
       return interaction.reply({
         content: `${config.emojis.cancel} Bu komutu sadece bot sahibi kullanabilir.`,
         flags: ["Ephemeral"]

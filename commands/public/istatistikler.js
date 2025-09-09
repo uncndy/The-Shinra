@@ -57,19 +57,23 @@ module.exports = {
       .setThumbnail(user.displayAvatarURL())
       .setDescription(`**${user.username}** (\`${user.id}\`) kullanıcısına ait istatistikler:`)
       .addFields(
-        { name: `${config.emojis.stats} Genel İstatistikler`, value: `• **Son 24 Saat:** \`${last24h} mesaj\`\n• **Son 7 Gün:** \`${last7d} mesaj\`\n• **Son 30 Gün:** \`${last30d} mesaj\`\n• **Toplam Mesaj:** \`${totalMessages} mesaj\`\n• **Son Mesaj:** ${lastMessageTime}`, inline: false },
+        { 
+          name: `${config.emojis.stats} Genel İstatistikler`, value: `• **Son 24 Saat:** \`${last24h} mesaj\`\n• **Son 7 Gün:** \`${last7d} mesaj\`\n• **Son 30 Gün:** \`${last30d} mesaj\`\n• **Toplam Mesaj:** \`${totalMessages} mesaj\`\n• **Son Mesaj:** ${lastMessageTime}`, inline: false },
         {
           name: `${config.emojis.stats} Kanal İstatistikleri`, value: topChannels.map(([channelId, count], i) => {
             const channel = interaction.guild.channels.cache.get(channelId);
             return `**${i + 1}.** ${channel ? channel : `#${channelId}`} — \`${count} mesaj\``;
-          }).join("\n") || "Kanal bulunamadı.", inline: false
+          }).join("\n") || "Kanal bulunamadı.",
+          inline: false
         },
-        { name: "", value: `${config.emojis.info} Mesaj sayısı, botun veritabanında kaydedilen mesaj sayısını yansıtmaktadır. Bot, hiçbir mesaj içeriğini kaydetmez.`, inline: false }
+        { 
+          name: "", value: `${config.emojis.info} Mesaj sayısı, botun veritabanında kaydedilen mesaj sayısını yansıtmaktadır. Bot, hiçbir mesaj içeriğini kaydetmez.`,
+          inline: false 
+        }
       )
       .setFooter({ text: "The Shinra | Ateşin Efsanesi", iconURL: interaction.guild.iconURL() })
       .setTimestamp();
 
-    // Embedi kullanıcıya gönder
     await interaction.reply({ embeds: [statsEmbed] });
   }
 };

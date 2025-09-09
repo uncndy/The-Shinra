@@ -18,7 +18,6 @@ module.exports = {
     } catch (err) {
       // Silent fail for message log errors
     }
-
     const userId = message.author.id;
     const channel = message.guild.channels.cache.get(config.logChannels.memberLog);
 
@@ -47,6 +46,13 @@ module.exports = {
             if (role) {
               await message.member.roles.add(role).catch(() => {});
               userData.roles.push(config.roles.star);
+            }
+          }
+          if (userData.level >= 20 && !userData.roles.includes(config.roles.partner)) {
+            const role = message.guild.roles.cache.get(config.roles.partner);
+            if (role) {
+              await message.member.roles.add(role).catch(() => {});
+              userData.roles.push(config.roles.partner);
             }
           }
         } else {

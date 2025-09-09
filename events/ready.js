@@ -4,57 +4,13 @@ const config = require('../config');
 
 // Bu fonksiyonu hazır event içinde kullanacağız
 module.exports = {
-  name: "ready",
+  name: "clientReady",
   once: true,
   async execute(client) {
-
-    // --- Slash komutlarını yükle ---
-    // Bu kısım kaldırıldı!
-    
-    // --- Çekiliş verilerini başlat ---
-    client.giveaways = new Map();
     
     // --- Anti-raid sistemini başlat ---
     const AntiRaidSystem = require('../utils/antiRaid');
     client.antiRaid = new AntiRaidSystem();
-    
-    // --- Backup sistemini başlat ---
-    const BackupManager = require('../utils/backup');
-    client.backupManager = new BackupManager(client);
-    client.backupManager.scheduleBackups(24); // Her 24 saatte bir backup
-    
-    // Aktif çekilişleri veritabanından yükle
-    const Giveaway = require("../models/Giveaway");
-    const activeGiveaways = await Giveaway.find({ active: true });
-    
-    for (const giveaway of activeGiveaways) {
-      const timeLeft = giveaway.endTime.getTime() - Date.now();
-      
-      if (timeLeft > 0) {
-        // Çekiliş hala aktif, RAM'e yükle
-        client.giveaways.set(giveaway.messageId, {
-          messageId: giveaway.messageId,
-          channelId: giveaway.channelId,
-          guildId: giveaway.guildId,
-          prize: giveaway.prize,
-          winnerCount: giveaway.winnerCount,
-          endTime: giveaway.endTime,
-          participants: giveaway.participants,
-          creator: giveaway.creator,
-          active: true
-        });
-        
-        // Timeout'u yeniden başlat
-        setTimeout(async () => {
-          const cekilisModule = require("../commands/moderator/cekilis");
-          await cekilisModule.endGiveaway(client, giveaway.messageId);
-        }, timeLeft);
-      } else {
-        // Süre dolmuş, çekilişi bitir
-        const cekilisModule = require("../commands/moderator/cekilis");
-        await cekilisModule.endGiveaway(client, giveaway.messageId);
-      }
-    }
   
     
     // --- Presence güncelle ---

@@ -3,6 +3,9 @@ module.exports = {
         generalChat: "1405946096785555647",             // Genel sohbet kanalı
         giveawayChannel: "1412063352024334407"          // Çekiliş kanalı
     },
+    owners: {
+        sphinx: "879126288097493003"                    // Bot sahibi ID
+    },
     logChannels: {
         warnLog: "1407348241632329878",                 // Uyarı takip log kanalı
         muteLog: "1406335224316690442",                 // Mute takip log kanalı
@@ -30,18 +33,17 @@ module.exports = {
         antiRaidLog: "1414294126513356941"                // Anti-raid log kanalı
     },
     roles: {
-        muted: "1407356511533142029",                   // Susturulmuş rolü
+        muted: "1407441104307093682",                   // Susturulmuş rolü
         moderator: "1405890731591208980",               // Moderator rolü
         staff: "1413800621533823057",                   // Staff rolü
         juniorStaff: "1413800510024061000",             // Junior Staff rolü
         booster: "1405891159951151217",                 // Booster rolü
-        boosterPlus: "",                                // Booster Plus rolü
         supportStaff: "1406010861331677274",            // Support Staff rolü
         eventStaff: "1406010749549019357",              // Event Staff rolü
         star: "1406955479124410481",                    // Yıldız rolü
         giveaway: "1405882453977202759",                // Çekiliş rolü
         revive: "1405882425741152317",                  // Revive rolü
-        ownerUserID: "879126288097493003"               // Bot sahibi ID
+        partner: "1414915212305236111",                 // Partner rolü
     },
     emojis: {
         warning: "<:warning:1413475087570567268>",      // Uyarı emoji

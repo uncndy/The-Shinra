@@ -1,6 +1,7 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } = require("discord.js");
 const Question = require("../../models/Question");
 const config = require("../../config.js");
+const {components, texts} = require('../../components.js')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -32,8 +33,8 @@ module.exports = {
   async execute(interaction) {
     if (!interaction.member.roles.cache.has(config.roles.moderator) && !interaction.member.roles.cache.has(config.roles.staff) && interaction.user.id !== config.owners.sphinx) {
       return interaction.reply({
-        content: `${config.emojis.cancel} Bu komutu kullanmak için Moderatör, Staff rolüne sahip olmalısın veya bot sahibi olmalısın.`,
-        flags: ["Ephemeral"]
+        flags: [MessageFlags.Ephemeral],
+        components: [texts.tr.modOrStaffControlText, components.separator]
       });
     }
     if (interaction.options.getSubcommand() === "ekle") {

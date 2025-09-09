@@ -5,9 +5,11 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
+  MessageFlags,
 } = require("discord.js");
 const Sanction = require("../../models/Sanction");
 const config = require("../../config");
+const {components, texts} = require('../../components')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -89,8 +91,8 @@ module.exports = {
       interaction.user.id !== config.owners.sphinx
     ) {
       return interaction.reply({
-        content: `${config.emojis.cancel} Bu komutu kullanmak için yetkin yok.`,
-        flags: ["Ephemeral"],
+        flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+        components: [texts.tr.modOrStaffOrJrStaffControlText, components.separator]
       });
     }
 

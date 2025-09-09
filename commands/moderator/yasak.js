@@ -1,7 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, SeparatorBuilder, MessageFlags, TextDisplayBuilder } = require("discord.js");
 const Sanction = require("../../models/Sanction");
 const User = require("../../models/User");
 const config = require('../../config');
+const {components, texts} = require('../../components')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -37,8 +38,8 @@ module.exports = {
     // Yetki kontrolü
     if (!interaction.member.roles.cache.has(config.roles.moderator) && interaction.user.id !== config.owners.sphinx) {
       return interaction.reply({
-        content: `${config.emojis.cancel} Bu komutu kullanmak için Moderatör rolüne sahip olmalısın veya bot sahibi olmalısın.`,
-        flags: ["Ephemeral"]
+        flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+        components: [texts.tr.modControlText, components.separator]
       });
     }
 
@@ -47,16 +48,20 @@ module.exports = {
 
     // Kullanıcı kontrolleri
     if (user.id === interaction.user.id) {
+      const text = new TextDisplayBuilder().setContent(`${config.emojis.cancel} Kendine işlem uygulayamazsın.`);
+      const separator = new SeparatorBuilder();
       return interaction.reply({
-        content: `${config.emojis.cancel} Kendine işlem uygulayamazsın.`,
-        flags: ["Ephemeral"]
+        flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+        components: [text, separator]
       });
     }
 
     if (user.id === interaction.client.user.id) {
+      const text = new TextDisplayBuilder().setContent(`${config.emojis.cancel} Botu işlem uygulayamazsın.`);
+      const separator = new SeparatorBuilder();
       return interaction.reply({
-        content: `${config.emojis.cancel} Bota işlem uygulayamazsın.`,
-        flags: ["Ephemeral"]
+        flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+        components: [text, separator]
       });
     }
 
@@ -68,9 +73,11 @@ module.exports = {
     }
 
     if (targetMember && targetMember.roles.highest.position >= interaction.member.roles.highest.position) {
+      const text = new TextDisplayBuilder().setContent(`${config.emojis.cancel} Bu kullanıcıya işlem uygulayamazsın (rol hiyerarşisi).`);
+      const separator = new SeparatorBuilder();
       return interaction.reply({
-        content: `${config.emojis.cancel} Bu kullanıcıya işlem uygulayamazsın (rol hiyerarşisi).`,
-        flags: ["Ephemeral"]
+        flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+        components: [text, separator]
       });
     }
 
@@ -90,13 +97,15 @@ module.exports = {
         .setLabel("Hayır, İptal Et")
         .setStyle(ButtonStyle.Secondary)
     );
-
-    await interaction.reply({
-      content: isBan
+    const text = new TextDisplayBuilder().setContent(
+      isBan
         ? `${config.emojis.warning} **@${user.username}** kullanıcısını \`${reason}\` sebebiyle banlamak istediğine emin misin?`
-        : `${config.emojis.warning} **@${user.username}** kullanıcısının banını kaldırmak istediğine emin misin?`,
-      components: [confirmationRow],
-      flags: ["Ephemeral"]
+        : `${config.emojis.warning} **@${user.username}** kullanıcısının banını kaldırmak istediğine emin misin?`
+    );
+    const separator = new SeparatorBuilder();
+    await interaction.reply({
+      flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+      components: [text, separator, confirmationRow]
     });
 
     const filter = i => i.user.id === interaction.user.id;

@@ -1,5 +1,6 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const config = require('../../config');
+const {components, texts} = require('../../components')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -15,8 +16,8 @@ module.exports = {
     // Yetki kontrolü
     if (!interaction.member.roles.cache.has(config.roles.moderator) && interaction.user.id !== config.owners.sphinx) {
       return interaction.reply({ 
-        content: `${config.emojis.cancel} Bu komutu kullanmak için Moderatör rolüne sahip olmalısın veya bot sahibi olmalısın.`, 
-        flags: ["Ephemeral"] 
+        flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+        components: [texts.tr.modControlText, components.separator]
       });
     }
 

@@ -5,10 +5,14 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
-  PermissionFlagsBits
+  PermissionFlagsBits,
+  SeparatorBuilder,
+  MessageFlags,
+  TextDisplayBuilder
 } = require("discord.js");
 const Sanction = require("../../models/Sanction");
 const config = require('../../config');
+const {components, texts} = require('../../components')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -25,8 +29,7 @@ module.exports = {
         .setName("sebep")
         .setDescription("Kick sebebi")
         .setRequired(false)
-    )
-    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers), // v15 için önerilen kullanım
+    ), // v15 için önerilen kullanım
 
   async execute(interaction) {
     // Yetki kontrolü
@@ -36,8 +39,8 @@ module.exports = {
       interaction.user.id !== config.owners.sphinx
     ) {
       return interaction.reply({
-        content: `${config.emojis.cancel} Bu komutu kullanmak için Moderatör, Staff rolüne sahip olmalısın veya bot sahibi olmalısın.`,
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+        components: [texts.tr.modOrStaffControlText, components.separator]
       });
     }
 
@@ -79,10 +82,11 @@ module.exports = {
           .setStyle(ButtonStyle.Secondary)
       );
 
+      const text = new TextDisplayBuilder().setContent(`${config.emojis.warning} **${user.tag}** kullanıcısını \`${reason}\` sebebiyle atmak istediğine emin misin?`);
+      const separator = new SeparatorBuilder();
       const confirmationMessage = await interaction.reply({
-        content: `${config.emojis.warning} **${user.tag}** kullanıcısını \`${reason}\` sebebiyle atmak istediğine emin misin?`,
-        components: [confirmationRow],
-        flags: ["Ephemeral"]
+        flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+        components: [text, separator, confirmationRow]
       });
 
       // v15 Collector kullanımı (çok değişmeyecek)

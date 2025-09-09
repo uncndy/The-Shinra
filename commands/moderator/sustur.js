@@ -4,11 +4,13 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ComponentType
+  ComponentType,
+  MessageFlags
 } = require("discord.js");
 const Sanction = require("../../models/Sanction");
 const User = require("../../models/User");
 const config = require("../../config");
+const {components, texts} = require('../../components')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -51,8 +53,8 @@ module.exports = {
       interaction.user.id !== config.owners.sphinx
     ) {
       return interaction.reply({
-        content: `${config.emojis.cancel} Bu komutu kullanmak için Moderatör, Staff rolüne sahip olmalısın veya bot sahibi olmalısın.`,
-        flags: ["Ephemeral"]
+        flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+        components: [texts.tr.modOrStaffControlText, components.separator]
       });
     }
 
